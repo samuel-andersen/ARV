@@ -1,0 +1,114 @@
+@import "tailwindcss";
+
+/**
+ * Arv Design System v1.0 — CSS layer.
+ * Mirrors lib/design/tokens.ts. Tailwind v4 CSS-first config: the @theme block
+ * generates utilities (bg-snow, text-gran, border-line, …) from these tokens.
+ */
+
+@theme {
+  /* Palette — one hue, seven values, fixed roles. */
+  --color-snow: #ffffff;
+  --color-mist: #f5f5f4;
+  --color-line: #e2e2e0;
+  --color-salvie: #e3eae4;
+  --color-gran: #49604f;
+  --color-stone: #6f6f6c;
+  --color-ink: #141413;
+  --color-fog: #ebebea;
+
+  --color-positive: #2e6b4f;
+  --color-negative: #9b3b30;
+
+  /* Foregrounds on the Ink surface. */
+  --color-on-ink-heading: #ffffff;
+  --color-on-ink-body: #c9c9c7;
+  --color-on-ink-muted: #6f6f6c;
+
+  /* Type. Inter only in chrome; book serif is scoped to book surfaces. */
+  --font-sans: var(--font-inter), Inter, ui-sans-serif, system-ui, sans-serif;
+  --font-book: Fraunces, ui-serif, Georgia, serif;
+
+  /* Zero radius is the law. */
+  --radius-none: 0px;
+
+  /* Motion. */
+  --ease-arv: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+:root {
+  /* 8pt spacing echoes for raw CSS use. */
+  --space-1: 8px;
+  --space-2: 16px;
+  --space-3: 24px;
+  --space-4: 32px;
+
+  --motion-fast: 150ms;
+  --motion-base: 250ms;
+  --motion-slow: 500ms;
+}
+
+* {
+  border-color: var(--color-line);
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  background-color: var(--color-snow);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-weight: 400;
+  /* No bold, no italics as house style — components opt into 300/500 explicitly. */
+}
+
+/* The label treatment — 11px, +0.22em, uppercase, Stone (Gran on Salvie). */
+.label {
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  font-weight: 500;
+  color: var(--color-stone);
+}
+
+.on-salvie .label,
+.label.on-salvie {
+  color: var(--color-gran);
+}
+
+/* Focus: Gran, the only interactive color. */
+:where(a, button, input, textarea, select, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-gran);
+  outline-offset: 2px;
+}
+
+/* Skeletons never spinners. */
+@keyframes arv-shimmer {
+  0% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.55;
+  }
+}
+
+.skeleton {
+  background-color: var(--color-mist);
+  animation: arv-shimmer var(--motion-slow) var(--ease-arv) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
