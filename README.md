@@ -10,35 +10,53 @@ professionally designed, printed hardcover.
 
 ---
 
-## Status: foundation
+## Status: core loop working end-to-end
 
-This repository currently contains the **foundation** — the skeleton every
-feature is built on. It compiles, encodes the design system, and defines the
-full data model and the seams for external services. Feature surfaces (import
-agent, book builder UI, sharing) build on top of this.
+The **manual recipe → book builder → print-ready PDF** loop runs end-to-end with
+**zero external dependencies** (no AI/print keys needed) — the slice that proves
+the product. On top of the foundation (design system, data model, provider
+seams), the following now works:
 
-**In place now**
+**Foundation**
 
 - Next.js 15 (App Router, TypeScript) scaffold, installable PWA manifest with
   the **Share → Arv** share-target seam.
 - **Arv Design System v1.0** as the single source of truth — TypeScript tokens
   (`lib/design/tokens.ts`) mirrored into Tailwind v4 CSS tokens
   (`app/globals.css`). One hue, seven values, fixed roles; Inter 300/400/500;
-  zero radius; hairlines, not shadows.
+  zero radius; hairlines, not shadows; no italics.
 - Complete **Supabase schema** (`supabase/migrations/`) with **RLS on every
-  table**, storage buckets, and a seed (`supabase/seed.sql`) of 5 recipes + 1
-  book — including one deliberately messy import that proves the normalization
-  pass has work to do.
-- Shared **Zod schemas** (`lib/schemas/`) used across extraction, forms, and DB.
+  table**, storage buckets, and a seed of 5 recipes + 1 book — including one
+  deliberately messy import that proves the normalization pass has work to do.
+- Shared **Zod schemas** (`lib/schemas/`) across extraction, forms, and DB.
 - Typed **provider interfaces** with retries/timeouts/failover
   (`lib/providers/`): `MediaFetchProvider`, `TranscriptionProvider`,
-  `PrintProvider` — all shipping stubs, real adapters slot in later.
-- Deterministic **book template auto-selection** (`lib/book/template-selection.ts`)
-  — the rule that keeps a user from ever making an ugly page, incl. the image
-  quality defense.
+  `PrintProvider` — stubs for now, real adapters slot in later.
 
-**Not yet built** (clean seams left in place): auth surface, import pipeline,
-library, book builder UI, PDF generation, sharing, billing.
+**Core loop**
+
+- **Auth**: email magic link (`/login`, `/auth/confirm`), Google OAuth callback
+  seam, session middleware, sign-out; onboarding ("Who are you collecting for?").
+- **Recipes**: manual create/edit with a **story** field, dynamic
+  ingredients/steps; **library** with search; recipe page with a **servings
+  scaler**, step **timers**, and imported-recipe **attribution**.
+- **Book builder**: create a book (Editorial style), chapters, add/reorder
+  recipes, **auto template selection** with valid-only overrides, cover +
+  dedication, **preflight** (24–200 page bounds), and a **live spread preview**.
+- **Deterministic page model** (`lib/book/layout.ts`) shared by the preview and
+  the PDF, so the same content always produces the same pages (snapshot-testable).
+- **Print-ready PDF** (`/api/books/[id]/pdf`) via `@react-pdf/renderer` — the
+  Editorial style at 20×25 cm with embedded Fraunces/Inter (vendored under
+  `assets/fonts/`). Verify the pipeline without a DB: `npx tsx scripts/verify-pdf.ts`.
+
+**Not yet built** (clean seams left in place): the import pipeline (AI
+extraction + normalization), sharing (public pages, contributor invites),
+Rustic/Minimal styles, live fulfillment, and billing.
+
+> **Note on typing:** the Supabase clients are currently untyped (results are
+> shaped into explicit types in `lib/data/*`). After `npm run db:types`
+> generates `Database` types from a live schema, add the `<Database>` generic
+> back to the clients in `lib/supabase/` to restore end-to-end typing.
 
 ---
 

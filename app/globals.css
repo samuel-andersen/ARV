@@ -27,7 +27,7 @@
 
   /* Type. Inter only in chrome; book serif is scoped to book surfaces. */
   --font-sans: var(--font-inter), Inter, ui-sans-serif, system-ui, sans-serif;
-  --font-book: Fraunces, ui-serif, Georgia, serif;
+  --font-book: var(--font-fraunces), Fraunces, ui-serif, Georgia, serif;
 
   /* Zero radius is the law. */
   --radius-none: 0px;

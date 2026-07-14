@@ -1,16 +1,18 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
-import type { Database } from "./database.types";
 
 /**
  * Server Supabase client for Server Components, Server Actions, and Route
  * Handlers. RLS is enforced everywhere, so this always runs as the signed-in
  * user (never the service role).
+ *
+ * Untyped for now — see lib/supabase/client.ts for how to restore the
+ * `<Database>` generic once types are generated from a live schema.
  */
 export async function createClient() {
   const cookieStore = await cookies();
 
-  return createServerClient<Database>(
+  return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {

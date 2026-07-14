@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Eyebrow } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { color } from "@/lib/design/tokens";
@@ -23,8 +24,12 @@ export default function Home() {
       </p>
 
       <div className="mt-10 flex items-center gap-4">
-        <Button>Start collecting</Button>
-        <Button variant="secondary">See a book</Button>
+        <Link href="/login">
+          <Button>Start collecting</Button>
+        </Link>
+        <Link href="/library">
+          <Button variant="secondary">Go to library</Button>
+        </Link>
       </div>
 
       {/* Design-system proof band. */}

@@ -1,0 +1,307 @@
+"use client";
+
+import { useState, useTransition } from "react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Input, Textarea } from "@/components/ui/input";
+import { Eyebrow } from "@/components/ui/label";
+import { SpreadPreview } from "@/components/book/spread-preview";
+import type { BookWithContent } from "@/lib/data/books";
+import type { RecipeListItem } from "@/lib/data/recipes";
+import type { PageModel } from "@/lib/book/layout";
+import { deriveSignals, validTemplatesFor } from "@/lib/book/template-selection";
+import type { PageTemplate } from "@/lib/schemas/common";
+import {
+  addChapter,
+  addRecipeToChapter,
+  deleteChapter,
+  moveRecipe,
+  removeRecipeFromChapter,
+  setTemplateOverride,
+  updateBook,
+} from "@/lib/actions/books";
+import { cn } from "@/lib/utils";
+
+export function BookBuilder({
+  book,
+  availableRecipes,
+  pages,
+  pageCount,
+}: {
+  book: BookWithContent;
+  availableRecipes: RecipeListItem[];
+  pages: PageModel[];
+  pageCount: number;
+}) {
+  const [pending, startTransition] = useTransition();
+  const [showPreview, setShowPreview] = useState(true);
+  const [newChapter, setNewChapter] = useState("");
+  const [details, setDetails] = useState({
+    title: book.title,
+    subtitle: book.subtitle ?? "",
+    dedication: book.dedication ?? "",
+  });
+
+  const run = (fn: () => Promise<unknown>) => startTransition(() => void fn());
+
+  const placedIds = new Set(
+    book.chapters.flatMap((ch) => ch.recipes.map((p) => p.recipe.id)),
+  );
+  const belowMin = pageCount < 24;
+  const aboveMax = pageCount > 200;
+
+  return (
+    <div className="flex flex-col gap-10">
+      {/* Header */}
+      <div className="flex items-start justify-between gap-6">
+        <div>
+          <Eyebrow>Book builder · {book.style}</Eyebrow>
+          <h1 className="mt-3 text-3xl font-light text-ink">{book.title}</h1>
+          {book.subtitle && <p className="mt-1 font-light text-stone">{book.subtitle}</p>}
+        </div>
+        <div className="flex shrink-0 items-center gap-4">
+          <button
+            type="button"
+            onClick={() => setShowPreview((s) => !s)}
+            className="text-sm font-light text-gran hover:text-ink"
+          >
+            {showPreview ? "Hide preview" : "Show preview"}
+          </button>
+          <Link href={`/api/books/${book.id}/pdf`} prefetch={false}>
+            <Button>Download print-ready PDF</Button>
+          </Link>
+        </div>
+      </div>
+
+      {/* Preflight line */}
+      <div
+        className={cn(
+          "border-l-2 px-4 py-2 text-sm font-light",
+          belowMin || aboveMax ? "border-negative text-negative" : "border-salvie text-stone",
+        )}
+      >
+        {belowMin
+          ? `Estimated ${pageCount} pages — a hardcover needs at least 24. Add more recipes.`
+          : aboveMax
+            ? `Estimated ${pageCount} pages — over the 200-page maximum. Split the book.`
+            : `Estimated ${pageCount} pages · trim ${book.trim_size} cm · 300 DPI target`}
+      </div>
+
+      <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_1.1fr]">
+        {/* Left: structure editor */}
+        <div className="flex flex-col gap-8">
+          {/* Details */}
+          <section className="border border-line p-5">
+            <Eyebrow>Cover &amp; dedication</Eyebrow>
+            <div className="mt-4 flex flex-col gap-3">
+              <Input
+                value={details.title}
+                onChange={(e) => setDetails((d) => ({ ...d, title: e.target.value }))}
+                placeholder="Title"
+              />
+              <Input
+                value={details.subtitle}
+                onChange={(e) => setDetails((d) => ({ ...d, subtitle: e.target.value }))}
+                placeholder="Subtitle"
+              />
+              <Textarea
+                rows={2}
+                value={details.dedication}
+                onChange={(e) => setDetails((d) => ({ ...d, dedication: e.target.value }))}
+                placeholder="Dedication"
+              />
+              <div>
+                <Button
+                  variant="secondary"
+                  disabled={pending}
+                  onClick={() =>
+                    run(() =>
+                      updateBook(book.id, {
+                        title: details.title.trim() || book.title,
+                        subtitle: details.subtitle.trim() || null,
+                        dedication: details.dedication.trim() || null,
+                      }),
+                    )
+                  }
+                >
+                  Save details
+                </Button>
+              </div>
+            </div>
+          </section>
+
+          {/* Chapters */}
+          {book.chapters.map((ch) => (
+            <section key={ch.id} className="border border-line p-5">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-light text-ink">{ch.title}</h2>
+                <button
+                  type="button"
+                  onClick={() => run(() => deleteChapter(book.id, ch.id))}
+                  className="text-[11px] font-medium uppercase tracking-[0.22em] text-stone hover:text-negative"
+                >
+                  Remove chapter
+                </button>
+              </div>
+
+              <ul className="mt-4 flex flex-col">
+                {ch.recipes.map((p, i) => {
+                  const valid = validTemplatesFor(deriveSignals(p.recipe));
+                  return (
+                    <li
+                      key={p.recipe.id}
+                      className="flex items-center gap-3 border-b border-line py-3"
+                    >
+                      <div className="flex flex-col">
+                        <button
+                          type="button"
+                          disabled={i === 0}
+                          onClick={() => run(() => moveRecipe(book.id, ch.id, p.recipe.id, "up"))}
+                          className="text-xs text-stone hover:text-gran disabled:text-fog"
+                          aria-label="Move up"
+                        >
+                          ▲
+                        </button>
+                        <button
+                          type="button"
+                          disabled={i === ch.recipes.length - 1}
+                          onClick={() => run(() => moveRecipe(book.id, ch.id, p.recipe.id, "down"))}
+                          className="text-xs text-stone hover:text-gran disabled:text-fog"
+                          aria-label="Move down"
+                        >
+                          ▼
+                        </button>
+                      </div>
+                      <span className="flex-1 font-light text-ink">{p.recipe.title}</span>
+                      <select
+                        value={p.template_override ?? "auto"}
+                        onChange={(e) =>
+                          run(() =>
+                            setTemplateOverride(
+                              book.id,
+                              ch.id,
+                              p.recipe.id,
+                              e.target.value === "auto" ? null : (e.target.value as PageTemplate),
+                            ),
+                          )
+                        }
+                        className="h-8 rounded-none border border-line bg-snow px-2 text-xs text-ink focus:border-gran focus:outline-none"
+                      >
+                        <option value="auto">Auto</option>
+                        {valid.map((t) => (
+                          <option key={t} value={t}>
+                            {t.replace(/_/g, " ")}
+                          </option>
+                        ))}
+                      </select>
+                      <button
+                        type="button"
+                        onClick={() => run(() => removeRecipeFromChapter(book.id, ch.id, p.recipe.id))}
+                        className="px-1 text-stone hover:text-negative"
+                        aria-label="Remove from book"
+                      >
+                        ×
+                      </button>
+                    </li>
+                  );
+                })}
+                {ch.recipes.length === 0 && (
+                  <li className="py-3 text-sm font-light text-stone">No recipes yet.</li>
+                )}
+              </ul>
+
+              {/* Add recipe to this chapter */}
+              <AddRecipeControl
+                disabled={pending}
+                recipes={availableRecipes}
+                placedIds={placedIds}
+                onAdd={(recipeId) => run(() => addRecipeToChapter(book.id, ch.id, recipeId))}
+              />
+            </section>
+          ))}
+
+          {/* Add chapter */}
+          <section className="flex items-end gap-3">
+            <div className="flex-1">
+              <Eyebrow>New chapter</Eyebrow>
+              <Input
+                className="mt-2"
+                value={newChapter}
+                onChange={(e) => setNewChapter(e.target.value)}
+                placeholder="Mornings"
+              />
+            </div>
+            <Button
+              variant="secondary"
+              disabled={pending || !newChapter.trim()}
+              onClick={() => {
+                const title = newChapter.trim();
+                if (!title) return;
+                setNewChapter("");
+                run(() => addChapter(book.id, { title }));
+              }}
+            >
+              Add chapter
+            </Button>
+          </section>
+        </div>
+
+        {/* Right: live preview */}
+        {showPreview && (
+          <div className="lg:sticky lg:top-6 lg:self-start">
+            <Eyebrow>Live preview</Eyebrow>
+            <div className="mt-4 max-h-[80vh] overflow-y-auto border border-line">
+              <SpreadPreview pages={pages} />
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function AddRecipeControl({
+  recipes,
+  placedIds,
+  onAdd,
+  disabled,
+}: {
+  recipes: RecipeListItem[];
+  placedIds: Set<string>;
+  onAdd: (recipeId: string) => void;
+  disabled: boolean;
+}) {
+  const [value, setValue] = useState("");
+  const options = recipes.filter((r) => !placedIds.has(r.id));
+
+  return (
+    <div className="mt-4 flex items-center gap-3">
+      <select
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        disabled={disabled || options.length === 0}
+        className="h-9 flex-1 rounded-none border border-line bg-snow px-2 text-sm text-ink focus:border-gran focus:outline-none disabled:text-fog"
+      >
+        <option value="">{options.length ? "Add a recipe…" : "All recipes are placed"}</option>
+        {options.map((r) => (
+          <option key={r.id} value={r.id}>
+            {r.title}
+          </option>
+        ))}
+      </select>
+      <button
+        type="button"
+        disabled={disabled || !value}
+        onClick={() => {
+          if (value) {
+            onAdd(value);
+            setValue("");
+          }
+        }}
+        className="text-sm font-light text-gran hover:text-ink disabled:text-fog"
+      >
+        Add
+      </button>
+    </div>
+  );
+}

@@ -1,0 +1,44 @@
+import { renderToBuffer } from "@react-pdf/renderer";
+import { getBookWithContent } from "@/lib/data/books";
+import { getCurrentUser } from "@/lib/auth/user";
+import { buildBookPages } from "@/lib/book/layout";
+import { registerPrintFonts } from "@/lib/pdf/fonts";
+import { BookDocument } from "@/lib/pdf/editorial";
+
+// react-pdf needs Node APIs (fontkit, fs) — never the edge runtime.
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+export async function GET(
+  _request: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const { id } = await params;
+
+  const user = await getCurrentUser();
+  if (!user) {
+    return new Response("Unauthorized", { status: 401 });
+  }
+
+  const book = await getBookWithContent(id);
+  if (!book) {
+    return new Response("Not found", { status: 404 });
+  }
+
+  registerPrintFonts();
+  const pages = buildBookPages(book, user.displayName);
+  // react-pdf requires the ROOT element to be a <Document>, so we call the
+  // builder to get the element rather than wrapping it in a component.
+  const element = BookDocument({ pages }) as Parameters<typeof renderToBuffer>[0];
+  const buffer = await renderToBuffer(element);
+
+  const filename = `${book.title.replace(/[^\w\-]+/g, "-").toLowerCase() || "arv-book"}.pdf`;
+
+  return new Response(new Uint8Array(buffer), {
+    headers: {
+      "Content-Type": "application/pdf",
+      "Content-Disposition": `attachment; filename="${filename}"`,
+      "Cache-Control": "no-store",
+    },
+  });
+}
