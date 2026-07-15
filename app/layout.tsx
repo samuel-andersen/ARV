@@ -40,6 +40,8 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
+  // Draw under the notch/home indicator so chrome can use safe-area insets.
+  viewportFit: "cover",
 };
 
 export default function RootLayout({

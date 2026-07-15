@@ -157,15 +157,18 @@ export function RecipeForm({
         <Eyebrow>Ingredients</Eyebrow>
         <div className="mt-4 flex flex-col gap-2">
           {ingredients.map((r, i) => (
-            <div key={i} className="grid grid-cols-[64px_80px_1fr_1fr_auto] items-center gap-2">
-              <Input placeholder="Qty" value={r.quantity} onChange={(e) => setIng(i, { quantity: e.target.value })} />
-              <Input placeholder="Unit" value={r.unit} onChange={(e) => setIng(i, { unit: e.target.value })} />
-              <Input placeholder="Ingredient" value={r.name} onChange={(e) => setIng(i, { name: e.target.value })} />
-              <Input placeholder="Note (optional)" value={r.note} onChange={(e) => setIng(i, { note: e.target.value })} />
+            <div
+              key={i}
+              className="flex flex-wrap items-center gap-2 border-b border-line py-2 sm:border-0 sm:py-0"
+            >
+              <Input className="w-16" inputMode="decimal" placeholder="Qty" value={r.quantity} onChange={(e) => setIng(i, { quantity: e.target.value })} />
+              <Input className="w-[72px]" placeholder="Unit" value={r.unit} onChange={(e) => setIng(i, { unit: e.target.value })} />
+              <Input className="min-w-[45%] flex-1" placeholder="Ingredient" value={r.name} onChange={(e) => setIng(i, { name: e.target.value })} />
+              <Input className="min-w-[45%] flex-1" placeholder="Note (optional)" value={r.note} onChange={(e) => setIng(i, { note: e.target.value })} />
               <button
                 type="button"
                 onClick={() => setIngredients((p) => p.filter((_, idx) => idx !== i))}
-                className="px-2 text-stone hover:text-negative"
+                className="tap ml-auto px-2 text-lg text-stone hover:text-negative"
                 aria-label="Remove ingredient"
               >
                 ×
@@ -176,7 +179,7 @@ export function RecipeForm({
         <button
           type="button"
           onClick={() => setIngredients((p) => [...p, { quantity: "", unit: "", name: "", note: "" }])}
-          className="mt-3 text-sm font-light text-gran hover:text-ink"
+          className="tap mt-3 inline-flex min-h-11 items-center text-sm font-light text-gran hover:text-ink"
         >
           + Add ingredient
         </button>
@@ -192,13 +195,13 @@ export function RecipeForm({
               <div className="flex-1">
                 <Textarea rows={2} placeholder="Describe the step" value={r.text} onChange={(e) => setStep(i, { text: e.target.value })} />
               </div>
-              <div className="w-28 shrink-0">
-                <Input placeholder="Timer min" inputMode="numeric" value={r.timer_min} onChange={(e) => setStep(i, { timer_min: e.target.value })} />
+              <div className="w-20 shrink-0">
+                <Input placeholder="Timer" inputMode="numeric" value={r.timer_min} onChange={(e) => setStep(i, { timer_min: e.target.value })} />
               </div>
               <button
                 type="button"
                 onClick={() => setSteps((p) => p.filter((_, idx) => idx !== i))}
-                className="mt-3 px-2 text-stone hover:text-negative"
+                className="tap mt-3 px-2 text-lg text-stone hover:text-negative"
                 aria-label="Remove step"
               >
                 ×
@@ -209,7 +212,7 @@ export function RecipeForm({
         <button
           type="button"
           onClick={() => setSteps((p) => [...p, { text: "", timer_min: "" }])}
-          className="mt-3 text-sm font-light text-gran hover:text-ink"
+          className="tap mt-3 inline-flex min-h-11 items-center text-sm font-light text-gran hover:text-ink"
         >
           + Add step
         </button>

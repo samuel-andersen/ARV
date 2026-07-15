@@ -55,6 +55,9 @@
 html {
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  /* Never let iOS auto-inflate type in landscape / after rotation. */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 body {
@@ -63,6 +66,40 @@ body {
   font-family: var(--font-sans);
   font-weight: 400;
   /* No bold, no italics as house style — components opt into 300/500 explicitly. */
+  /* App-grade touch feel: no blue tap flash, no chained overscroll bounce. */
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
+}
+
+/* Safe-area tokens (notch, home indicator). Zero on non-inset devices. */
+:root {
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --tabbar-h: 56px;
+}
+
+/* Translucent, blurred chrome — the iOS material look. */
+.app-chrome {
+  background-color: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(18px) saturate(1.1);
+  -webkit-backdrop-filter: blur(18px) saturate(1.1);
+}
+
+/* Tappable affordance: subtle press feedback, no hover dependency. */
+.tap {
+  transition:
+    transform 0.12s var(--ease-arv),
+    opacity 0.12s var(--ease-arv);
+  touch-action: manipulation;
+}
+.tap:active {
+  transform: scale(0.96);
+  opacity: 0.7;
+}
+
+/* iOS-momentum, no sideways page scroll. */
+.scroll-y {
+  -webkit-overflow-scrolling: touch;
 }
 
 /* The label treatment — 11px, +0.22em, uppercase, Stone (Gran on Salvie). */
