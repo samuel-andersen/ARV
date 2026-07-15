@@ -116,6 +116,49 @@ body {
   -webkit-overflow-scrolling: touch;
 }
 
+/* Page transition: content fades up on each navigation. */
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.page-enter {
+  animation: page-enter 260ms var(--ease-arv);
+}
+
+/* Staggered entrance for lists of choices (onboarding). */
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.rise-in {
+  animation: rise-in 420ms var(--ease-arv) both;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-enter,
+  .rise-in {
+    animation: none;
+  }
+}
+
 /* The label treatment — 11px, +0.22em, uppercase, Stone (Gran on Salvie). */
 .label {
   font-size: 11px;

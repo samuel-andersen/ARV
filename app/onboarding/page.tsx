@@ -16,6 +16,7 @@ export default function OnboardingPage() {
   const [pending, startTransition] = useTransition();
 
   function choose(value: string) {
+    if (pending) return;
     setSelected(value);
     startTransition(() => {
       void completeOnboarding(value);
@@ -23,33 +24,65 @@ export default function OnboardingPage() {
   }
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-lg flex-col justify-center px-6 py-16">
-      <Eyebrow>One question</Eyebrow>
-      <h1 className="mt-6 text-4xl font-light leading-tight text-ink">
-        Who are you collecting recipes for?
-      </h1>
-      <p className="mt-4 font-light text-stone">
-        It helps us set the tone. You can change your mind anytime.
-      </p>
-
-      <div className="mt-10 flex flex-col">
-        {CHOICES.map((c) => (
-          <button
-            key={c.value}
-            type="button"
-            disabled={pending}
-            onClick={() => choose(c.value)}
-            className={cn(
-              "flex items-baseline justify-between border-b border-line py-5 text-left",
-              "transition-colors duration-150 hover:bg-mist",
-              selected === c.value && "bg-salvie",
-            )}
-          >
-            <span className="text-lg font-light text-ink">{c.label}</span>
-            <span className="text-sm font-light text-stone">{c.hint}</span>
-          </button>
-        ))}
+    <main
+      className="mx-auto flex min-h-[100dvh] max-w-lg flex-col justify-center px-6"
+      style={{
+        paddingTop: "calc(var(--safe-top) + 32px)",
+        paddingBottom: "calc(var(--safe-bottom) + 32px)",
+      }}
+    >
+      <div className="rise-in" style={{ animationDelay: "40ms" }}>
+        <Eyebrow>One question</Eyebrow>
+        <h1 className="mt-6 text-4xl font-light leading-tight text-ink">
+          Who are you collecting recipes for?
+        </h1>
+        <p className="mt-4 font-light text-stone">
+          It helps us set the tone. You can change your mind anytime.
+        </p>
       </div>
+
+      <div className="mt-10 flex flex-col gap-3">
+        {CHOICES.map((c, i) => {
+          const isSelected = selected === c.value;
+          return (
+            <button
+              key={c.value}
+              type="button"
+              disabled={pending}
+              onClick={() => choose(c.value)}
+              style={{ animationDelay: `${140 + i * 90}ms` }}
+              className={cn(
+                "tap rise-in flex items-center justify-between border p-5 text-left transition-colors duration-150",
+                isSelected
+                  ? "border-gran bg-salvie"
+                  : "border-line bg-snow hover:border-gran",
+              )}
+            >
+              <span className="flex flex-col">
+                <span className={cn("text-lg font-light", isSelected ? "text-gran" : "text-ink")}>
+                  {c.label}
+                </span>
+                <span className="mt-0.5 text-sm font-light text-stone">{c.hint}</span>
+              </span>
+              <span
+                className={cn(
+                  "flex h-6 w-6 shrink-0 items-center justify-center border text-xs transition-all duration-150",
+                  isSelected ? "border-gran bg-gran text-snow" : "border-line text-transparent",
+                )}
+              >
+                ✓
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      <p
+        className="rise-in mt-8 text-center text-[11px] uppercase tracking-[0.22em] text-stone"
+        style={{ animationDelay: "440ms" }}
+      >
+        {pending ? "Setting up your kitchen…" : "Tap to continue"}
+      </p>
     </main>
   );
 }

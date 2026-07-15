@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "@/lib/actions/auth";
+import { PullToRefresh } from "@/components/app/pull-to-refresh";
 import { cn } from "@/lib/utils";
 
 type IconProps = { className?: string };
@@ -148,7 +149,11 @@ export function AppShell({
           paddingBottom: "calc(var(--tabbar-h) + var(--safe-bottom) + 24px)",
         }}
       >
-        {children}
+        <PullToRefresh>
+          <div key={pathname} className="page-enter">
+            {children}
+          </div>
+        </PullToRefresh>
       </main>
 
       {/* Bottom tab bar — Gran chrome, mobile only */}
