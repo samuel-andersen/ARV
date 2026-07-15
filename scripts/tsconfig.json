@@ -10,5 +10,5 @@
       "server-only": ["./empty-module.ts"]
     }
   },
-  "include": ["./**/*.ts"]
+  "include": ["./**/*.ts", "./**/*.tsx"]
 }

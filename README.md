@@ -66,10 +66,23 @@ seams), the following now works:
 - Freemium gate (free = 10 imports) enforced in the import action.
 - Verify the key-free path: `npx tsx --tsconfig scripts/tsconfig.json scripts/verify-import.ts`.
 
+**Sharing (core engine 3 — "del gleden")**
+
+- **Public recipe pages** (owner opt-in): a share toggle mints a stable slug;
+  `/r/[slug]` is a beautiful typeset, anon-readable landing page with
+  attribution intact and a "Save to your Arv" CTA — the viral loop. RLS allows
+  public read only when `is_public = true`.
+- **OG share cards**: `/r/[slug]/opengraph-image` renders a clean card (title +
+  "via …" + wordmark) via `next/og` with the vendored Fraunces/Inter fonts, so
+  shares look intentional in iMessage/WhatsApp/Stories.
+- **Contributor books**: owners invite by email; invitees accept from `/invites`
+  and add their own recipes to the shared book. Owner-only controls are gated in
+  the builder; contributors manage only their own placements (RLS-enforced).
+
 **Not yet built** (clean seams left in place): the See/Listen layers (ffmpeg
 frame sampling + Whisper transcription — interfaces exist), async job queue +
-Realtime status, sharing (public pages, contributor invites), Rustic/Minimal
-styles, live fulfillment, and billing.
+Realtime status, contributor story/signature fields on shared recipes,
+Rustic/Minimal styles, live fulfillment, and billing.
 
 > **Note on typing:** the Supabase clients are currently untyped (results are
 > shaped into explicit types in `lib/data/*`). After `npm run db:types`

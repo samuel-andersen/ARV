@@ -174,6 +174,60 @@ export async function setTemplateOverride(
   revalidatePath(`/books/${bookId}`);
 }
 
+/* ---- Contributors (sharing v1) ---- */
+
+export async function inviteContributor(bookId: string, email: string) {
+  const clean = email.trim().toLowerCase();
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(clean)) {
+    return { error: "Enter a valid email address." };
+  }
+  const supabase = await createClient();
+  const { error } = await supabase.from("book_contributors").insert({
+    book_id: bookId,
+    role: "contributor",
+    invited_email: clean,
+  });
+  if (error) {
+    return {
+      error: error.code === "23505" ? "That person is already invited." : error.message,
+    };
+  }
+  revalidatePath(`/books/${bookId}`);
+  return {};
+}
+
+/** The invited user accepts — links their account to the contributor row. */
+export async function acceptInvite(bookId: string): Promise<void> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user?.email) redirect("/login");
+
+  const { error } = await supabase
+    .from("book_contributors")
+    .update({ user_id: user.id, accepted_at: new Date().toISOString() })
+    .eq("book_id", bookId)
+    .eq("invited_email", user.email.toLowerCase());
+
+  // On failure, send them back to the invites list rather than a dead end.
+  if (error) redirect("/invites");
+
+  revalidatePath("/invites");
+  revalidatePath(`/books/${bookId}`);
+  redirect(`/books/${bookId}`);
+}
+
+export async function removeContributor(bookId: string, email: string) {
+  const supabase = await createClient();
+  await supabase
+    .from("book_contributors")
+    .delete()
+    .eq("book_id", bookId)
+    .eq("invited_email", email);
+  revalidatePath(`/books/${bookId}`);
+}
+
 export async function deleteBook(id: string) {
   const supabase = await createClient();
   await supabase.from("books").delete().eq("id", id);

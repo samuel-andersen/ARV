@@ -28,6 +28,54 @@ export interface BookWithContent extends Book {
   chapters: ChapterWithRecipes[];
 }
 
+export interface Contributor {
+  user_id: string | null;
+  role: string;
+  invited_email: string | null;
+  accepted_at: string | null;
+  display_name: string | null;
+}
+
+/** List a book's contributors (owner-visible). */
+export async function getBookContributors(bookId: string): Promise<Contributor[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("book_contributors")
+    .select("user_id, role, invited_email, accepted_at, profiles(display_name)")
+    .eq("book_id", bookId);
+  if (error) throw error;
+  return (data ?? []).map((c) => ({
+    user_id: c.user_id,
+    role: c.role,
+    invited_email: c.invited_email,
+    accepted_at: c.accepted_at,
+    display_name:
+      (c.profiles as unknown as { display_name: string | null } | null)?.display_name ?? null,
+  }));
+}
+
+export interface PendingInvite {
+  book_id: string;
+  book_title: string;
+  invited_email: string | null;
+}
+
+/** Invites addressed to the current user's email that they haven't accepted. */
+export async function getPendingInvites(email: string): Promise<PendingInvite[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("book_contributors")
+    .select("book_id, invited_email, books(title)")
+    .eq("invited_email", email)
+    .is("accepted_at", null);
+  if (error) throw error;
+  return (data ?? []).map((r) => ({
+    book_id: r.book_id,
+    invited_email: r.invited_email,
+    book_title: (r.books as unknown as { title: string } | null)?.title ?? "a book",
+  }));
+}
+
 export async function listBooks(): Promise<BookListItem[]> {
   const supabase = await createClient();
   const { data, error } = await supabase

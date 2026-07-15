@@ -3,7 +3,10 @@ import { notFound } from "next/navigation";
 import { getRecipe } from "@/lib/data/recipes";
 import { deleteRecipe } from "@/lib/actions/recipes";
 import { RecipeBody } from "@/components/recipe/recipe-body";
+import { ShareToggle } from "@/components/recipe/share-toggle";
 import { Eyebrow } from "@/components/ui/label";
+
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
 export default async function RecipePage({
   params,
@@ -74,6 +77,15 @@ export default async function RecipePage({
           baseServings={recipe.servings}
           ingredients={recipe.ingredients}
           steps={recipe.steps}
+        />
+      </div>
+
+      <div className="mt-12 max-w-xl">
+        <ShareToggle
+          recipeId={recipe.id}
+          initialPublic={recipe.is_public}
+          initialSlug={recipe.share_slug}
+          siteUrl={SITE_URL}
         />
       </div>
 

@@ -14,6 +14,7 @@ const nextConfig: NextConfig = {
   // Ensure the vendored print fonts are traced into the PDF route's deployment.
   outputFileTracingIncludes: {
     "/api/books/[id]/pdf": ["./assets/fonts/**"],
+    "/r/[slug]/opengraph-image": ["./assets/fonts/**"],
   },
 };
 

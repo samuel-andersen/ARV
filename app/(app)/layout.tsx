@@ -27,6 +27,9 @@ export default async function AppLayout({
             <Link href="/import" className="font-light text-stone hover:text-gran">
               Import
             </Link>
+            <Link href="/invites" className="font-light text-stone hover:text-gran">
+              Invites
+            </Link>
             <Link
               href="/recipes/new"
               className="font-light text-gran hover:text-ink"

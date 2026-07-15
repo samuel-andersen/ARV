@@ -52,15 +52,32 @@ export async function listRecipes(query?: string): Promise<RecipeListItem[]> {
 
 /** Load a single recipe with its ingredients, steps, and tags. */
 export async function getRecipe(id: string): Promise<RecipeWithChildren | null> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("recipes")
-    .select(
-      "*, ingredients(*), steps(*), recipe_tags(tags(name))",
-    )
-    .eq("id", id)
-    .maybeSingle();
+  return loadRecipe("id", id);
+}
 
+/**
+ * Load a public recipe by its share slug (readable by anyone). Returns null
+ * unless the recipe is opted into public sharing — RLS enforces this too.
+ */
+export async function getPublicRecipeBySlug(
+  slug: string,
+): Promise<RecipeWithChildren | null> {
+  return loadRecipe("share_slug", slug, true);
+}
+
+async function loadRecipe(
+  column: "id" | "share_slug",
+  value: string,
+  publicOnly = false,
+): Promise<RecipeWithChildren | null> {
+  const supabase = await createClient();
+  let q = supabase
+    .from("recipes")
+    .select("*, ingredients(*), steps(*), recipe_tags(tags(name))")
+    .eq(column, value);
+  if (publicOnly) q = q.eq("is_public", true);
+
+  const { data, error } = await q.maybeSingle();
   if (error) throw error;
   if (!data) return null;
 

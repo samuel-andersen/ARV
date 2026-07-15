@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input, Textarea } from "@/components/ui/input";
 import { Eyebrow } from "@/components/ui/label";
 import { SpreadPreview } from "@/components/book/spread-preview";
-import type { BookWithContent } from "@/lib/data/books";
+import type { BookWithContent, Contributor } from "@/lib/data/books";
 import type { RecipeListItem } from "@/lib/data/recipes";
 import type { PageModel } from "@/lib/book/layout";
 import { deriveSignals, validTemplatesFor } from "@/lib/book/template-selection";
@@ -15,7 +15,9 @@ import {
   addChapter,
   addRecipeToChapter,
   deleteChapter,
+  inviteContributor,
   moveRecipe,
+  removeContributor,
   removeRecipeFromChapter,
   setTemplateOverride,
   updateBook,
@@ -27,11 +29,17 @@ export function BookBuilder({
   availableRecipes,
   pages,
   pageCount,
+  isOwner,
+  currentUserId,
+  contributors,
 }: {
   book: BookWithContent;
   availableRecipes: RecipeListItem[];
   pages: PageModel[];
   pageCount: number;
+  isOwner: boolean;
+  currentUserId: string | null;
+  contributors: Contributor[];
 }) {
   const [pending, startTransition] = useTransition();
   const [showPreview, setShowPreview] = useState(true);
@@ -55,7 +63,7 @@ export function BookBuilder({
       {/* Header */}
       <div className="flex items-start justify-between gap-6">
         <div>
-          <Eyebrow>Book builder · {book.style}</Eyebrow>
+          <Eyebrow>{isOwner ? `Book builder · ${book.style}` : "Contributing to"}</Eyebrow>
           <h1 className="mt-3 text-3xl font-light text-ink">{book.title}</h1>
           {book.subtitle && <p className="mt-1 font-light text-stone">{book.subtitle}</p>}
         </div>
@@ -90,7 +98,8 @@ export function BookBuilder({
       <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_1.1fr]">
         {/* Left: structure editor */}
         <div className="flex flex-col gap-8">
-          {/* Details */}
+          {/* Details — owner only */}
+          {isOwner && (
           <section className="border border-line p-5">
             <Eyebrow>Cover &amp; dedication</Eyebrow>
             <div className="mt-4 flex flex-col gap-3">
@@ -129,79 +138,101 @@ export function BookBuilder({
               </div>
             </div>
           </section>
+          )}
+
+          {/* Contributors — owner only (sharing v1) */}
+          {isOwner && (
+            <ContributorsPanel bookId={book.id} contributors={contributors} disabled={pending} run={run} />
+          )}
 
           {/* Chapters */}
           {book.chapters.map((ch) => (
             <section key={ch.id} className="border border-line p-5">
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-light text-ink">{ch.title}</h2>
-                <button
-                  type="button"
-                  onClick={() => run(() => deleteChapter(book.id, ch.id))}
-                  className="text-[11px] font-medium uppercase tracking-[0.22em] text-stone hover:text-negative"
-                >
-                  Remove chapter
-                </button>
+                {isOwner && (
+                  <button
+                    type="button"
+                    onClick={() => run(() => deleteChapter(book.id, ch.id))}
+                    className="text-[11px] font-medium uppercase tracking-[0.22em] text-stone hover:text-negative"
+                  >
+                    Remove chapter
+                  </button>
+                )}
               </div>
 
               <ul className="mt-4 flex flex-col">
                 {ch.recipes.map((p, i) => {
                   const valid = validTemplatesFor(deriveSignals(p.recipe));
+                  const canEdit = isOwner || p.recipe.owner_id === currentUserId;
                   return (
                     <li
                       key={p.recipe.id}
                       className="flex items-center gap-3 border-b border-line py-3"
                     >
-                      <div className="flex flex-col">
+                      {isOwner ? (
+                        <div className="flex flex-col">
+                          <button
+                            type="button"
+                            disabled={i === 0}
+                            onClick={() => run(() => moveRecipe(book.id, ch.id, p.recipe.id, "up"))}
+                            className="text-xs text-stone hover:text-gran disabled:text-fog"
+                            aria-label="Move up"
+                          >
+                            ▲
+                          </button>
+                          <button
+                            type="button"
+                            disabled={i === ch.recipes.length - 1}
+                            onClick={() => run(() => moveRecipe(book.id, ch.id, p.recipe.id, "down"))}
+                            className="text-xs text-stone hover:text-gran disabled:text-fog"
+                            aria-label="Move down"
+                          >
+                            ▼
+                          </button>
+                        </div>
+                      ) : null}
+                      <span className="flex-1 font-light text-ink">
+                        {p.recipe.title}
+                        {!isOwner && p.recipe.owner_id !== currentUserId && (
+                          <span className="ml-2 text-[11px] uppercase tracking-[0.22em] text-stone">
+                            by another
+                          </span>
+                        )}
+                      </span>
+                      {canEdit && (
+                        <select
+                          value={p.template_override ?? "auto"}
+                          onChange={(e) =>
+                            run(() =>
+                              setTemplateOverride(
+                                book.id,
+                                ch.id,
+                                p.recipe.id,
+                                e.target.value === "auto" ? null : (e.target.value as PageTemplate),
+                              ),
+                            )
+                          }
+                          className="h-8 rounded-none border border-line bg-snow px-2 text-xs text-ink focus:border-gran focus:outline-none"
+                        >
+                          <option value="auto">Auto</option>
+                          {valid.map((t) => (
+                            <option key={t} value={t}>
+                              {t.replace(/_/g, " ")}
+                            </option>
+                          ))}
+                        </select>
+                      )}
+                      {canEdit && (
                         <button
                           type="button"
-                          disabled={i === 0}
-                          onClick={() => run(() => moveRecipe(book.id, ch.id, p.recipe.id, "up"))}
-                          className="text-xs text-stone hover:text-gran disabled:text-fog"
-                          aria-label="Move up"
+                          onClick={() => run(() => removeRecipeFromChapter(book.id, ch.id, p.recipe.id))}
+                          className="px-1 text-stone hover:text-negative"
+                          aria-label="Remove from book"
                         >
-                          ▲
+                          ×
                         </button>
-                        <button
-                          type="button"
-                          disabled={i === ch.recipes.length - 1}
-                          onClick={() => run(() => moveRecipe(book.id, ch.id, p.recipe.id, "down"))}
-                          className="text-xs text-stone hover:text-gran disabled:text-fog"
-                          aria-label="Move down"
-                        >
-                          ▼
-                        </button>
-                      </div>
-                      <span className="flex-1 font-light text-ink">{p.recipe.title}</span>
-                      <select
-                        value={p.template_override ?? "auto"}
-                        onChange={(e) =>
-                          run(() =>
-                            setTemplateOverride(
-                              book.id,
-                              ch.id,
-                              p.recipe.id,
-                              e.target.value === "auto" ? null : (e.target.value as PageTemplate),
-                            ),
-                          )
-                        }
-                        className="h-8 rounded-none border border-line bg-snow px-2 text-xs text-ink focus:border-gran focus:outline-none"
-                      >
-                        <option value="auto">Auto</option>
-                        {valid.map((t) => (
-                          <option key={t} value={t}>
-                            {t.replace(/_/g, " ")}
-                          </option>
-                        ))}
-                      </select>
-                      <button
-                        type="button"
-                        onClick={() => run(() => removeRecipeFromChapter(book.id, ch.id, p.recipe.id))}
-                        className="px-1 text-stone hover:text-negative"
-                        aria-label="Remove from book"
-                      >
-                        ×
-                      </button>
+                      )}
                     </li>
                   );
                 })}
@@ -220,30 +251,32 @@ export function BookBuilder({
             </section>
           ))}
 
-          {/* Add chapter */}
-          <section className="flex items-end gap-3">
-            <div className="flex-1">
-              <Eyebrow>New chapter</Eyebrow>
-              <Input
-                className="mt-2"
-                value={newChapter}
-                onChange={(e) => setNewChapter(e.target.value)}
-                placeholder="Mornings"
-              />
-            </div>
-            <Button
-              variant="secondary"
-              disabled={pending || !newChapter.trim()}
-              onClick={() => {
-                const title = newChapter.trim();
-                if (!title) return;
-                setNewChapter("");
-                run(() => addChapter(book.id, { title }));
-              }}
-            >
-              Add chapter
-            </Button>
-          </section>
+          {/* Add chapter — owner only */}
+          {isOwner && (
+            <section className="flex items-end gap-3">
+              <div className="flex-1">
+                <Eyebrow>New chapter</Eyebrow>
+                <Input
+                  className="mt-2"
+                  value={newChapter}
+                  onChange={(e) => setNewChapter(e.target.value)}
+                  placeholder="Mornings"
+                />
+              </div>
+              <Button
+                variant="secondary"
+                disabled={pending || !newChapter.trim()}
+                onClick={() => {
+                  const title = newChapter.trim();
+                  if (!title) return;
+                  setNewChapter("");
+                  run(() => addChapter(book.id, { title }));
+                }}
+              >
+                Add chapter
+              </Button>
+            </section>
+          )}
         </div>
 
         {/* Right: live preview */}
@@ -257,6 +290,84 @@ export function BookBuilder({
         )}
       </div>
     </div>
+  );
+}
+
+function ContributorsPanel({
+  bookId,
+  contributors,
+}: {
+  bookId: string;
+  contributors: Contributor[];
+  disabled: boolean;
+  run: (fn: () => Promise<unknown>) => void;
+}) {
+  const [email, setEmail] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
+
+  function invite() {
+    setError(null);
+    const value = email.trim();
+    if (!value) return;
+    startTransition(async () => {
+      const res = await inviteContributor(bookId, value);
+      if (res?.error) setError(res.error);
+      else setEmail("");
+    });
+  }
+
+  return (
+    <section className="border border-line p-5">
+      <Eyebrow>Contributors</Eyebrow>
+      <p className="mt-2 text-sm font-light text-stone">
+        Invite family or friends by email. They add their own recipes — with
+        their story and signature — to this shared book.
+      </p>
+
+      {contributors.length > 0 && (
+        <ul className="mt-4 flex flex-col">
+          {contributors.map((c) => (
+            <li
+              key={c.invited_email ?? c.user_id ?? Math.random()}
+              className="flex items-center justify-between border-b border-line py-2.5"
+            >
+              <span className="font-light text-ink">
+                {c.display_name ?? c.invited_email}
+                <span className="ml-2 text-[11px] uppercase tracking-[0.22em] text-stone">
+                  {c.accepted_at ? "joined" : "invited"}
+                </span>
+              </span>
+              {c.invited_email && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    startTransition(() => void removeContributor(bookId, c.invited_email!))
+                  }
+                  className="px-1 text-stone hover:text-negative"
+                  aria-label="Remove contributor"
+                >
+                  ×
+                </button>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <div className="mt-4 flex items-center gap-3">
+        <Input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="friend@example.com"
+        />
+        <Button variant="secondary" disabled={pending || !email.trim()} onClick={invite}>
+          Invite
+        </Button>
+      </div>
+      {error && <p className="mt-2 text-sm font-light text-negative">{error}</p>}
+    </section>
   );
 }
 

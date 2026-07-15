@@ -1,5 +1,9 @@
 import { notFound } from "next/navigation";
-import { getBookWithContent } from "@/lib/data/books";
+import {
+  getBookWithContent,
+  getBookContributors,
+  type Contributor,
+} from "@/lib/data/books";
 import { listRecipes } from "@/lib/data/recipes";
 import { getCurrentUser } from "@/lib/auth/user";
 import { buildBookPages, estimatePageCount } from "@/lib/book/layout";
@@ -18,6 +22,9 @@ export default async function BookBuilderPage({
   ]);
   if (!book) notFound();
 
+  const isOwner = !!user && user.id === book.owner_id;
+  const contributors: Contributor[] = isOwner ? await getBookContributors(id) : [];
+
   const pages = buildBookPages(book, user?.displayName ?? null);
   const pageCount = estimatePageCount(pages);
 
@@ -27,6 +34,9 @@ export default async function BookBuilderPage({
       availableRecipes={recipes}
       pages={pages}
       pageCount={pageCount}
+      isOwner={isOwner}
+      currentUserId={user?.id ?? null}
+      contributors={contributors}
     />
   );
 }

@@ -88,6 +88,42 @@ export async function updateRecipe(
   redirect(`/recipes/${id}`);
 }
 
+/**
+ * Toggle a recipe's public share page (owner opt-in). Generates a stable slug
+ * the first time it's shared. Returns the slug when public.
+ */
+export async function setRecipeSharing(
+  id: string,
+  makePublic: boolean,
+): Promise<{ error?: string; slug?: string | null }> {
+  const supabase = await createClient();
+
+  if (!makePublic) {
+    const { error } = await supabase.from("recipes").update({ is_public: false }).eq("id", id);
+    if (error) return { error: error.message };
+    revalidatePath(`/recipes/${id}`);
+    return { slug: null };
+  }
+
+  // Reuse an existing slug if present, else mint one.
+  const { data: existing } = await supabase
+    .from("recipes")
+    .select("share_slug")
+    .eq("id", id)
+    .maybeSingle();
+  const slug =
+    existing?.share_slug ?? crypto.randomUUID().replace(/-/g, "").slice(0, 10);
+
+  const { error } = await supabase
+    .from("recipes")
+    .update({ is_public: true, share_slug: slug })
+    .eq("id", id);
+  if (error) return { error: error.message };
+
+  revalidatePath(`/recipes/${id}`);
+  return { slug };
+}
+
 export async function deleteRecipe(id: string) {
   const supabase = await createClient();
   const { error } = await supabase.from("recipes").delete().eq("id", id);
