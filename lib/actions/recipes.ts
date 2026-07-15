@@ -4,58 +4,11 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { recipeInputSchema, type RecipeInput } from "@/lib/schemas/recipe";
+import { upsertRecipeTags, writeRecipeChildren } from "@/lib/data/recipe-write";
 
 export interface RecipeActionResult {
   error?: string;
   fieldErrors?: Record<string, string>;
-}
-
-async function upsertTags(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  recipeId: string,
-  tagNames: string[],
-) {
-  if (!tagNames.length) return;
-  const names = [...new Set(tagNames.map((t) => t.trim().toLowerCase()).filter(Boolean))];
-  if (!names.length) return;
-
-  await supabase.from("tags").upsert(
-    names.map((name) => ({ name })),
-    { onConflict: "name", ignoreDuplicates: true },
-  );
-  const { data: tags } = await supabase.from("tags").select("id, name").in("name", names);
-  if (tags?.length) {
-    await supabase
-      .from("recipe_tags")
-      .insert(tags.map((t) => ({ recipe_id: recipeId, tag_id: t.id })));
-  }
-}
-
-async function writeChildren(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  recipeId: string,
-  input: RecipeInput,
-) {
-  const ingredients = input.ingredients.map((ing, position) => ({
-    recipe_id: recipeId,
-    position,
-    quantity: ing.quantity,
-    unit: ing.unit,
-    name: ing.name,
-    note: ing.note,
-    needs_review: ing.needs_review,
-  }));
-  const steps = input.steps.map((s, position) => ({
-    recipe_id: recipeId,
-    position,
-    text: s.text,
-    timer_seconds: s.timer_seconds,
-  }));
-
-  const ins = await supabase.from("ingredients").insert(ingredients);
-  if (ins.error) throw ins.error;
-  const sts = await supabase.from("steps").insert(steps);
-  if (sts.error) throw sts.error;
 }
 
 /** Create a manual recipe (is_original, already in house voice → normalized). */
@@ -92,8 +45,8 @@ export async function createRecipe(input: RecipeInput): Promise<RecipeActionResu
 
   if (error || !recipe) return { error: error?.message ?? "Could not save recipe." };
 
-  await writeChildren(supabase, recipe.id, data);
-  await upsertTags(supabase, recipe.id, data.tags);
+  await writeRecipeChildren(supabase, recipe.id, data);
+  await upsertRecipeTags(supabase, recipe.id, data.tags);
 
   revalidatePath("/library");
   redirect(`/recipes/${recipe.id}`);
@@ -127,8 +80,8 @@ export async function updateRecipe(
   await supabase.from("ingredients").delete().eq("recipe_id", id);
   await supabase.from("steps").delete().eq("recipe_id", id);
   await supabase.from("recipe_tags").delete().eq("recipe_id", id);
-  await writeChildren(supabase, id, data);
-  await upsertTags(supabase, id, data.tags);
+  await writeRecipeChildren(supabase, id, data);
+  await upsertRecipeTags(supabase, id, data.tags);
 
   revalidatePath(`/recipes/${id}`);
   revalidatePath("/library");

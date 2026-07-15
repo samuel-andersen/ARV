@@ -49,7 +49,16 @@ function numOrNull(s: string): number | null {
   return s.trim() === "" || Number.isNaN(n) ? null : n;
 }
 
-export function RecipeForm({ initial }: { initial?: RecipeFormInitial }) {
+export function RecipeForm({
+  initial,
+  onSave,
+  submitLabel,
+}: {
+  initial?: RecipeFormInitial;
+  /** Override the default create/update save (used by import review). */
+  onSave?: (input: RecipeInput) => Promise<{ error?: string } | void>;
+  submitLabel?: string;
+}) {
   const data = initial ?? EMPTY;
   const [title, setTitle] = useState(data.title);
   const [description, setDescription] = useState(data.description);
@@ -109,9 +118,11 @@ export function RecipeForm({ initial }: { initial?: RecipeFormInitial }) {
     if (!input.steps.length) return setError("Add at least one step.");
 
     startTransition(async () => {
-      const result = data.id
-        ? await updateRecipe(data.id, input)
-        : await createRecipe(input);
+      const result = onSave
+        ? await onSave(input)
+        : data.id
+          ? await updateRecipe(data.id, input)
+          : await createRecipe(input);
       if (result?.error) setError(result.error);
     });
   }
@@ -212,7 +223,7 @@ export function RecipeForm({ initial }: { initial?: RecipeFormInitial }) {
 
       <div className="flex items-center gap-4">
         <Button onClick={submit} disabled={pending}>
-          {pending ? "Saving…" : data.id ? "Save changes" : "Save recipe"}
+          {pending ? "Saving…" : submitLabel ?? (data.id ? "Save changes" : "Save recipe")}
         </Button>
       </div>
     </div>

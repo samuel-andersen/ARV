@@ -49,9 +49,27 @@ seams), the following now works:
   Editorial style at 20×25 cm with embedded Fraunces/Inter (vendored under
   `assets/fonts/`). Verify the pipeline without a DB: `npx tsx scripts/verify-pdf.ts`.
 
-**Not yet built** (clean seams left in place): the import pipeline (AI
-extraction + normalization), sharing (public pages, contributor invites),
-Rustic/Minimal styles, live fulfillment, and billing.
+**Import agent (core engine 1)**
+
+- Layered pipeline (`lib/import/`): **Fetch** (`SourceAdapter` per platform —
+  generic-web via JSON-LD then readability, YouTube via oEmbed, IG/TikTok via
+  the `MediaFetchProvider` seam) → **Understand** → **Normalize**.
+- **Understand** and **Normalize** run behind typed providers
+  (`lib/providers/extraction.ts`, `normalization.ts`). With `ANTHROPIC_API_KEY`
+  set they use a `claude-opus-4-8` structured-output call; **with no key**, a
+  deterministic heuristic extractor + rule-based normalizer keep the paste-text
+  path fully working (unit canonicalization `fedd → clove`, `needs_review`
+  flags, timer extraction, emoji/chatter stripping).
+- Import UI (`/import`): paste a link or paste text → editable **Review** step
+  (reuses the recipe form) with honest fallback messaging and attribution kept
+  → **Save to your Arv**. PWA **share-target** (`/import/share`) wired.
+- Freemium gate (free = 10 imports) enforced in the import action.
+- Verify the key-free path: `npx tsx --tsconfig scripts/tsconfig.json scripts/verify-import.ts`.
+
+**Not yet built** (clean seams left in place): the See/Listen layers (ffmpeg
+frame sampling + Whisper transcription — interfaces exist), async job queue +
+Realtime status, sharing (public pages, contributor invites), Rustic/Minimal
+styles, live fulfillment, and billing.
 
 > **Note on typing:** the Supabase clients are currently untyped (results are
 > shaped into explicit types in `lib/data/*`). After `npm run db:types`
