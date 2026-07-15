@@ -31,12 +31,14 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     title: "Arv",
-    statusBarStyle: "default",
+    // White status text over the Gran header when installed to the home screen.
+    statusBarStyle: "black-translucent",
   },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#FFFFFF",
+  // Brand chrome — Gran in the browser/PWA UI.
+  themeColor: "#49604F",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,

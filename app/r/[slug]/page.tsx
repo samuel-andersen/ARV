@@ -34,7 +34,8 @@ export default async function PublicRecipePage({
   const book = { fontFamily: "var(--font-book)" };
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-16">
+    <div className="min-h-screen bg-mist px-4 py-8 sm:py-14">
+      <main className="paper-sheet mx-auto max-w-3xl p-6 sm:p-12">
       <div className="flex items-center justify-between">
         <Eyebrow>Shared via Arv</Eyebrow>
         <Link
@@ -112,6 +113,7 @@ export default async function PublicRecipePage({
       <p className="mt-10 text-center text-[11px] uppercase tracking-[0.22em] text-stone">
         Samlet med Arv · arv.kitchen
       </p>
-    </main>
+      </main>
+    </div>
   );
 }

@@ -22,7 +22,7 @@ export default async function RecipePage({
   const totalMin = (recipe.prep_min ?? 0) + (recipe.cook_min ?? 0);
 
   return (
-    <article className="max-w-4xl">
+    <article className="paper-sheet mx-auto max-w-3xl p-6 sm:p-10">
       <div className="flex items-start justify-between gap-6">
         <div>
           <Eyebrow>{recipe.is_original ? "Own recipe" : recipe.source_platform}</Eyebrow>

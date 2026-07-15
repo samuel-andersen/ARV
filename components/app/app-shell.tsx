@@ -89,11 +89,14 @@ export function AppShell({
   const pathname = usePathname();
 
   return (
-    <div className="min-h-[100dvh]">
-      {/* Header */}
-      <header className="app-chrome sticky top-0 z-40 border-b border-line" style={{ paddingTop: "var(--safe-top)" }}>
+    <div className="min-h-[100dvh] bg-mist">
+      {/* Header — Gran brand chrome */}
+      <header
+        className="chrome-gran sticky top-0 z-40 border-b border-white/10"
+        style={{ paddingTop: "var(--safe-top)" }}
+      >
         <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-5">
-          <Link href="/library" className="tap text-base font-medium tracking-tight text-ink">
+          <Link href="/library" className="tap text-base font-medium tracking-tight text-snow">
             Arv
           </Link>
 
@@ -105,7 +108,7 @@ export function AppShell({
                 href={t.href}
                 className={cn(
                   "font-light transition-colors duration-150",
-                  isActive(pathname, t.href) ? "text-gran" : "text-stone hover:text-gran",
+                  isActive(pathname, t.href) ? "text-snow" : "text-snow/65 hover:text-snow",
                 )}
               >
                 {t.label}
@@ -115,7 +118,7 @@ export function AppShell({
               href="/import"
               className={cn(
                 "font-light transition-colors duration-150",
-                isActive(pathname, "/import") ? "text-gran" : "text-gran hover:text-ink",
+                isActive(pathname, "/import") ? "text-snow" : "text-snow/65 hover:text-snow",
               )}
             >
               Import
@@ -123,7 +126,7 @@ export function AppShell({
             <form action={signOut}>
               <button
                 type="submit"
-                className="text-[11px] font-medium uppercase tracking-[0.22em] text-stone hover:text-gran"
+                className="text-[11px] font-medium uppercase tracking-[0.22em] text-snow/60 hover:text-snow"
                 title={email ?? undefined}
               >
                 Sign out
@@ -132,7 +135,7 @@ export function AppShell({
           </nav>
 
           {/* Mobile: brand only in header; nav lives in the bottom bar. */}
-          <span className="text-[11px] font-medium uppercase tracking-[0.22em] text-stone sm:hidden">
+          <span className="text-[11px] font-medium uppercase tracking-[0.22em] text-snow/60 sm:hidden">
             arv.kitchen
           </span>
         </div>
@@ -148,9 +151,9 @@ export function AppShell({
         {children}
       </main>
 
-      {/* Bottom tab bar — mobile only */}
+      {/* Bottom tab bar — Gran chrome, mobile only */}
       <nav
-        className="app-chrome fixed inset-x-0 bottom-0 z-40 border-t border-line sm:hidden"
+        className="chrome-gran fixed inset-x-0 bottom-0 z-40 border-t border-white/10 sm:hidden"
         style={{ paddingBottom: "var(--safe-bottom)" }}
         aria-label="Primary"
       >
@@ -163,7 +166,7 @@ export function AppShell({
                   <Link
                     href={t.href}
                     aria-label={t.label}
-                    className="tap -mt-6 flex h-14 w-14 items-center justify-center bg-gran text-snow shadow-[0_8px_20px_-8px_rgba(73,96,79,0.7)]"
+                    className="tap -mt-6 flex h-14 w-14 items-center justify-center bg-snow text-gran shadow-[0_10px_22px_-8px_rgba(20,20,19,0.45)]"
                   >
                     <t.Icon className="h-6 w-6" />
                   </Link>
@@ -176,8 +179,8 @@ export function AppShell({
                   href={t.href}
                   aria-current={active ? "page" : undefined}
                   className={cn(
-                    "tap flex h-full flex-col items-center justify-center gap-1",
-                    active ? "text-gran" : "text-stone",
+                    "tap flex h-full flex-col items-center justify-center gap-1 transition-colors duration-150",
+                    active ? "text-snow" : "text-snow/55",
                   )}
                 >
                   <t.Icon className="h-[22px] w-[22px]" />
