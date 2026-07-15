@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getPublicRecipeBySlug } from "@/lib/data/recipes";
 import { RecipeBody } from "@/components/recipe/recipe-body";
+import { CookModeLauncher } from "@/components/recipe/cook-mode";
 import { Eyebrow } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 
@@ -58,6 +59,14 @@ export default async function PublicRecipePage({
           <p className="max-w-2xl font-light leading-relaxed text-ink">{recipe.story}</p>
         </blockquote>
       )}
+
+      <div className="mt-8 max-w-xs">
+        <CookModeLauncher
+          title={recipe.title}
+          ingredients={recipe.ingredients}
+          steps={recipe.steps}
+        />
+      </div>
 
       <div className="mt-12">
         <RecipeBody

@@ -4,6 +4,7 @@ import { getRecipe } from "@/lib/data/recipes";
 import { deleteRecipe } from "@/lib/actions/recipes";
 import { RecipeBody } from "@/components/recipe/recipe-body";
 import { ShareToggle } from "@/components/recipe/share-toggle";
+import { CookModeLauncher } from "@/components/recipe/cook-mode";
 import { Eyebrow } from "@/components/ui/label";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
@@ -71,6 +72,14 @@ export default async function RecipePage({
           </p>
         </blockquote>
       )}
+
+      <div className="mt-8 max-w-xs">
+        <CookModeLauncher
+          title={recipe.title}
+          ingredients={recipe.ingredients}
+          steps={recipe.steps}
+        />
+      </div>
 
       <div className="mt-12">
         <RecipeBody
