@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { CopyDebug } from "@/components/debug/copy-debug";
 
 export const dynamic = "force-dynamic";
 
@@ -79,12 +80,18 @@ export default async function DebugPage() {
     }
   }
 
+  const logText =
+    "ARV RLS-diagnose\n" + rows.map(([k, v]) => `${k}: ${v}`).join("\n");
+
   return (
     <main className="mx-auto max-w-2xl px-5 py-16">
       <h1 className="text-2xl font-light text-ink">RLS-diagnose</h1>
       <p className="mt-2 text-sm font-light text-stone">
-        Ta et skjermbilde av denne siden og send til meg.
+        Trykk «Kopier alt» og lim inn til meg.
       </p>
+      <div className="mt-5">
+        <CopyDebug text={logText} />
+      </div>
       <div className="mt-8 flex flex-col border-t border-line">
         {rows.map(([k, v], i) => (
           <div key={i} className="flex flex-col gap-1 border-b border-line py-3 sm:flex-row sm:gap-4">
