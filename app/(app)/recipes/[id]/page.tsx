@@ -6,6 +6,7 @@ import { ShareToggle } from "@/components/recipe/share-toggle";
 import { CookModeLauncher } from "@/components/recipe/cook-mode";
 import { BackButton } from "@/components/app/back-button";
 import { DeleteRecipeButton } from "@/components/recipe/delete-recipe-button";
+import { SourceQr } from "@/components/recipe/source-qr";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
@@ -122,6 +123,11 @@ export default async function RecipePage({
                 </a>
               )}
             </p>
+            {recipe.source_url && (
+              <div className="mt-4">
+                <SourceQr url={recipe.source_url} />
+              </div>
+            )}
           </div>
         )}
 
