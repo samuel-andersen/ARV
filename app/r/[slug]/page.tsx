@@ -14,10 +14,10 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
   const recipe = await getPublicRecipeBySlug(slug);
-  if (!recipe) return { title: "Recipe not found" };
+  if (!recipe) return { title: "Oppskrift ikke funnet" };
   return {
     title: recipe.title,
-    description: recipe.description ?? `A recipe shared via Arv.`,
+    description: recipe.description ?? "En oppskrift delt via Arv.",
     openGraph: { title: recipe.title, description: recipe.description ?? undefined },
   };
 }
@@ -31,13 +31,11 @@ export default async function PublicRecipePage({
   const recipe = await getPublicRecipeBySlug(slug);
   if (!recipe) notFound();
 
-  const book = { fontFamily: "var(--font-book)" };
-
   return (
-    <div className="min-h-screen bg-mist px-4 py-8 sm:py-14">
+    <div className="min-h-screen bg-papir px-4 py-8 sm:py-14">
       <main className="paper-sheet mx-auto max-w-3xl p-6 sm:p-12">
       <div className="flex items-center justify-between">
-        <Eyebrow>Shared via Arv</Eyebrow>
+        <Eyebrow>Delt via Arv</Eyebrow>
         <Link
           href="/"
           className="text-[11px] font-medium uppercase tracking-[0.22em] text-stone hover:text-gran"
@@ -46,18 +44,18 @@ export default async function PublicRecipePage({
         </Link>
       </div>
 
-      <h1 style={book} className="mt-8 text-5xl font-light leading-[1.05] text-ink">
+      <h1 className="serif mt-8 text-[40px] font-normal leading-[1.05] text-ink">
         {recipe.title}
       </h1>
       {recipe.description && (
-        <p style={book} className="mt-4 max-w-2xl text-lg font-light leading-relaxed text-stone">
+        <p className="serif mt-4 max-w-2xl text-lg font-light leading-relaxed text-stone">
           {recipe.description}
         </p>
       )}
 
       {recipe.story && (
         <blockquote className="mt-8 border-l-2 border-salvie pl-5">
-          <p className="max-w-2xl font-light leading-relaxed text-ink">{recipe.story}</p>
+          <p className="serif-italic max-w-2xl font-light leading-relaxed text-gran">{recipe.story}</p>
         </blockquote>
       )}
 
@@ -79,7 +77,7 @@ export default async function PublicRecipePage({
 
       {!recipe.is_original && (recipe.source_author || recipe.source_url) && (
         <footer className="mt-14 border-t border-line pt-6">
-          <Eyebrow>Source</Eyebrow>
+          <Eyebrow>Kilden</Eyebrow>
           <p className="mt-3 font-light text-stone">
             {recipe.source_author && <span>{recipe.source_author} · </span>}
             {recipe.source_url && (
@@ -98,14 +96,14 @@ export default async function PublicRecipePage({
 
       {/* Viral loop: every shared recipe is a landing page. */}
       <section className="mt-16 bg-salvie p-8">
-        <Eyebrow onSalvie>Keep it for good</Eyebrow>
+        <Eyebrow onSalvie>Ta vare på den</Eyebrow>
         <p className="mt-3 max-w-lg font-light text-gran">
-          Save this to your own Arv, gather the recipes you love, and turn them
-          into a printed hardcover. From scroll to shelf.
+          Lagre denne i din egen Arv, samle oppskriftene du er glad i, og gjør dem
+          til en trykt, innbundet bok. Fra feed til familiearv.
         </p>
         <div className="mt-6">
           <Link href="/login">
-            <Button>Save to your Arv</Button>
+            <Button>Lagre i din Arv</Button>
           </Link>
         </div>
       </section>
