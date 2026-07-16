@@ -11,6 +11,7 @@ import { SourceQr } from "@/components/recipe/source-qr";
 import { RecipeActions } from "@/components/recipe/recipe-actions";
 import { RecipeNotes } from "@/components/recipe/recipe-notes";
 import { RecipeImageUpload } from "@/components/recipe/recipe-image-upload";
+import { PhotoGuide } from "@/components/recipe/photo-guide";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
@@ -89,6 +90,14 @@ export default async function RecipePage({
           <p className="serif-italic border-l-2 border-salvie pl-3.5 text-[14.5px] font-light leading-relaxed text-gran">
             {recipe.story}
           </p>
+        )}
+
+        {/* No photo yet — nudge the owner to shoot their own, with a guide. */}
+        {isOwner && !recipe.image_url && (
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 bg-salvie/60 px-3.5 py-2.5 text-[12px] font-light text-gran">
+            <span>Retten mangler bilde.</span>
+            <PhotoGuide />
+          </div>
         )}
 
         {/* Edit bar — Rediger · Vis originalen · Lag min variant. */}

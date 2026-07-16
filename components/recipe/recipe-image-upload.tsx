@@ -6,31 +6,43 @@ import { createClient } from "@/lib/supabase/client";
 import { setRecipeImage } from "@/lib/actions/recipes";
 import { tapHaptic, okHaptic, alertHaptic } from "@/lib/haptics";
 
-const MAX_EDGE = 1600; // downscale phone photos before upload
+// Keep enough resolution for a full-page print at 300 PPI (~2400px on the long
+// edge for a 20cm page); cap only the truly huge originals so uploads stay sane.
+const MAX_EDGE = 3000;
+// Below this the photo starts to look soft on a full book page — we still allow
+// it but tell the user so nothing prints grainy by surprise.
+const PRINT_MIN_EDGE = 2000;
 const BUCKET = "recipe-images";
 
+type Prepared = { blob: Blob; longEdge: number };
+
 /**
- * Downscale a huge photo in the browser so uploads stay small and the hero
- * loads fast. Falls back to the original file if the canvas path fails.
+ * Read the photo, note its true resolution (for print guidance), and downscale
+ * only if it's larger than we need. Falls back to the original file on any
+ * canvas failure.
  */
-async function shrink(file: File): Promise<Blob> {
-  if (!file.type.startsWith("image/") || file.type === "image/gif") return file;
+async function prepare(file: File): Promise<Prepared> {
+  if (!file.type.startsWith("image/") || file.type === "image/gif") {
+    return { blob: file, longEdge: 0 };
+  }
   try {
     const bitmap = await createImageBitmap(file);
-    const scale = Math.min(1, MAX_EDGE / Math.max(bitmap.width, bitmap.height));
-    if (scale >= 1) return file;
+    const longEdge = Math.max(bitmap.width, bitmap.height);
+    const scale = Math.min(1, MAX_EDGE / longEdge);
+    if (scale >= 1) return { blob: file, longEdge };
+
     const canvas = document.createElement("canvas");
     canvas.width = Math.round(bitmap.width * scale);
     canvas.height = Math.round(bitmap.height * scale);
     const ctx = canvas.getContext("2d");
-    if (!ctx) return file;
+    if (!ctx) return { blob: file, longEdge };
     ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
     const blob = await new Promise<Blob | null>((resolve) =>
-      canvas.toBlob((b) => resolve(b), "image/jpeg", 0.85),
+      canvas.toBlob((b) => resolve(b), "image/jpeg", 0.92),
     );
-    return blob ?? file;
+    return { blob: blob ?? file, longEdge };
   } catch {
-    return file;
+    return { blob: file, longEdge: 0 };
   }
 }
 
@@ -38,7 +50,8 @@ async function shrink(file: File): Promise<Blob> {
  * Cover-photo uploader for a recipe. Shows a large "Legg til bilde" prompt over
  * the empty (Salvie) hero, or a discreet "Bytt bilde" chip once a photo exists.
  * Uploads straight to Storage from the browser (own uid/ folder), then persists
- * the public URL via a server action and refreshes.
+ * the public URL via a server action and refreshes. Flags photos too low-res for
+ * a full-page print so nothing goes to the printer grainy by surprise.
  */
 export function RecipeImageUpload({
   recipeId,
@@ -54,6 +67,7 @@ export function RecipeImageUpload({
   const [pending, startTransition] = useTransition();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [note, setNote] = useState<string | null>(null);
 
   const working = busy || pending;
 
@@ -63,23 +77,29 @@ export function RecipeImageUpload({
     if (!file) return;
 
     setError(null);
+    setNote(null);
     setBusy(true);
     tapHaptic();
     try {
       const supabase = createClient();
-      const body = await shrink(file);
-      const ext = body.type === "image/jpeg" ? "jpg" : file.name.split(".").pop() || "jpg";
+      const { blob, longEdge } = await prepare(file);
+      const ext = blob.type === "image/jpeg" ? "jpg" : file.name.split(".").pop() || "jpg";
       const path = `${userId}/${recipeId}-${Date.now()}.${ext}`;
 
       const { error: upErr } = await supabase.storage
         .from(BUCKET)
-        .upload(path, body, { upsert: true, contentType: body.type || file.type });
+        .upload(path, blob, { upsert: true, contentType: blob.type || file.type });
       if (upErr) throw new Error(upErr.message);
 
       const { data: pub } = supabase.storage.from(BUCKET).getPublicUrl(path);
       const res = await setRecipeImage(recipeId, pub.publicUrl);
       if (res?.error) throw new Error(res.error);
 
+      if (longEdge > 0 && longEdge < PRINT_MIN_EDGE) {
+        setNote(
+          `Bildet er ${longEdge} px bredt — fint på skjerm, men litt lavt for helside i trykk (best over ${PRINT_MIN_EDGE} px).`,
+        );
+      }
       okHaptic();
       startTransition(() => router.refresh());
     } catch (err) {
@@ -129,9 +149,13 @@ export function RecipeImageUpload({
         </button>
       )}
 
-      {error && (
-        <p className="absolute inset-x-0 bottom-0 z-10 bg-negative/90 px-3 py-1.5 text-center text-[11px] font-light text-snow">
-          {error}
+      {(error || note) && (
+        <p
+          className={`absolute inset-x-0 bottom-0 z-10 px-3 py-1.5 text-center text-[11px] font-light ${
+            error ? "bg-negative/90 text-snow" : "bg-ink/75 text-snow"
+          }`}
+        >
+          {error ?? note}
         </p>
       )}
     </>
