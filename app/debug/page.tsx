@@ -34,12 +34,24 @@ export default async function DebugPage() {
   ]);
 
   if (user) {
+    // Ground truth: ask the DB what auth.uid()/role it sees for THIS request.
+    const { data: who, error: whoErr } = await supabase.rpc("debug_whoami");
+    if (whoErr) {
+      rows.push(["whoami rpc", `error: ${whoErr.message}`]);
+    } else {
+      const w = who as { uid: string | null; jwt_sub: string | null; jwt_role: string | null } | null;
+      rows.push(["DB auth.uid()", w?.uid ?? "— (NULL)"]);
+      rows.push(["DB sees jwt.sub", w?.jwt_sub ?? "— (none)"]);
+      rows.push(["DB sees jwt.role", w?.jwt_role ?? "— (none)"]);
+      rows.push(["uid matches getUser", w?.uid === user.id ? "YES ✓" : "NO ✗ (mismatch!)"]);
+    }
+
     const { data: prof, error: profErr } = await supabase
       .from("profiles")
       .select("id")
       .eq("id", user.id)
       .maybeSingle();
-    rows.push(["profile visible under RLS", prof ? "YES (auth.uid works)" : "NO (auth.uid is null)"]);
+    rows.push(["profile visible under RLS", prof ? "YES" : "NO"]);
     if (profErr) rows.push(["profile read error", profErr.message]);
 
     // Live insert probe — rolled back immediately.
