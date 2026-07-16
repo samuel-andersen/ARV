@@ -15,7 +15,7 @@ export interface RecipeActionResult {
 export async function createRecipe(input: RecipeInput): Promise<RecipeActionResult> {
   const parsed = recipeInputSchema.safeParse(input);
   if (!parsed.success) {
-    return { error: "Please fix the highlighted fields." };
+    return { error: "Rett de markerte feltene." };
   }
   const data = parsed.data;
 
@@ -23,7 +23,25 @@ export async function createRecipe(input: RecipeInput): Promise<RecipeActionResu
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { error: "You must be signed in." };
+  if (!user) return { error: "Du må være logget inn." };
+
+  // Diagnostic guard: getUser() validates the token against the Auth server,
+  // but a recipe INSERT is enforced by Postgres RLS (`owner_id = auth.uid()`),
+  // which only passes if the *access token* rides along on the PostgREST
+  // request. If the DB can't even see our own profile row under RLS, the
+  // session isn't reaching the database — surface that plainly instead of a
+  // cryptic "row-level security policy" error.
+  const { data: seenByDb } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("id", user.id)
+    .maybeSingle();
+  if (!seenByDb) {
+    return {
+      error:
+        "Innlogget, men databasen ser deg ikke (sesjonen når ikke Postgres). Logg ut og inn igjen — vedvarer det, gi beskjed.",
+    };
+  }
 
   const { data: recipe, error } = await supabase
     .from("recipes")
@@ -43,7 +61,7 @@ export async function createRecipe(input: RecipeInput): Promise<RecipeActionResu
     .select("id")
     .single();
 
-  if (error || !recipe) return { error: error?.message ?? "Could not save recipe." };
+  if (error || !recipe) return { error: error?.message ?? "Kunne ikke lagre oppskriften." };
 
   await writeRecipeChildren(supabase, recipe.id, data);
   await upsertRecipeTags(supabase, recipe.id, data.tags);
@@ -58,7 +76,7 @@ export async function updateRecipe(
   input: RecipeInput,
 ): Promise<RecipeActionResult> {
   const parsed = recipeInputSchema.safeParse(input);
-  if (!parsed.success) return { error: "Please fix the highlighted fields." };
+  if (!parsed.success) return { error: "Rett de markerte feltene." };
   const data = parsed.data;
 
   const supabase = await createClient();
