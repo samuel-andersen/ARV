@@ -207,6 +207,21 @@ export async function createVariant(id: string): Promise<RecipeActionResult> {
   redirect(`/recipes/${created.id}`);
 }
 
+/** Persist a recipe's cover photo URL (after the file is uploaded to Storage). */
+export async function setRecipeImage(
+  recipeId: string,
+  imageUrl: string | null,
+): Promise<{ error?: string }> {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("recipes")
+    .update({ image_url: imageUrl })
+    .eq("id", recipeId);
+  if (error) return { error: error.message };
+  revalidatePath(`/recipes/${recipeId}`);
+  return {};
+}
+
 export async function deleteRecipe(id: string) {
   const supabase = await createClient();
   const { error } = await supabase.from("recipes").delete().eq("id", id);

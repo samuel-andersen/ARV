@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getRecipe, getRecipeNotes } from "@/lib/data/recipes";
+import { getCurrentUser } from "@/lib/auth/user";
 import { RecipeBody } from "@/components/recipe/recipe-body";
 import { ShareToggle } from "@/components/recipe/share-toggle";
 import { CookModeLauncher } from "@/components/recipe/cook-mode";
@@ -9,6 +10,7 @@ import { DeleteRecipeButton } from "@/components/recipe/delete-recipe-button";
 import { SourceQr } from "@/components/recipe/source-qr";
 import { RecipeActions } from "@/components/recipe/recipe-actions";
 import { RecipeNotes } from "@/components/recipe/recipe-notes";
+import { RecipeImageUpload } from "@/components/recipe/recipe-image-upload";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
@@ -32,7 +34,10 @@ export default async function RecipePage({
   const recipe = await getRecipe(id);
   if (!recipe) notFound();
   const notes = await getRecipeNotes(id);
+  const user = await getCurrentUser();
   const sourceRaw = (recipe as unknown as { source_raw?: string | null }).source_raw ?? null;
+  const ownerId = (recipe as unknown as { owner_id?: string }).owner_id;
+  const isOwner = !!user && user.id === ownerId;
 
   const time = totalTime(recipe.prep_min, recipe.cook_min);
   const credit = recipe.is_original
@@ -55,8 +60,15 @@ export default async function RecipePage({
           />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center">
-            <span className="serif text-5xl font-light text-gran/50">Arv</span>
+            <span className="serif text-5xl font-light text-gran/40">Arv</span>
           </div>
+        )}
+        {isOwner && (
+          <RecipeImageUpload
+            recipeId={recipe.id}
+            userId={user!.id}
+            hasImage={!!recipe.image_url}
+          />
         )}
         <BackButton />
       </div>
