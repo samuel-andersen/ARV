@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { completeOnboarding } from "@/lib/actions/auth";
 import { Eyebrow } from "@/components/ui/label";
+import { okHaptic } from "@/lib/haptics";
 import { cn } from "@/lib/utils";
 
 const CHOICES = [
@@ -13,13 +14,23 @@ const CHOICES = [
 
 export default function OnboardingPage() {
   const [selected, setSelected] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
   function choose(value: string) {
     if (pending) return;
+    okHaptic();
+    setError(null);
     setSelected(value);
-    startTransition(() => {
-      void completeOnboarding(value);
+    startTransition(async () => {
+      try {
+        await completeOnboarding(value);
+      } catch {
+        // A thrown redirect is normal control flow in Next — only surface real
+        // failures so the user isn't stuck on a dead, disabled screen.
+        setError("Noe stoppet opp. Prøv igjen.");
+        setSelected(null);
+      }
     });
   }
 
@@ -77,12 +88,16 @@ export default function OnboardingPage() {
         })}
       </div>
 
-      <p
-        className="rise-in mt-8 text-center text-[11px] uppercase tracking-[0.22em] text-stone"
-        style={{ animationDelay: "440ms" }}
-      >
-        {pending ? "Gjør klar kjøkkenet ditt…" : "Trykk for å fortsette"}
-      </p>
+      {error ? (
+        <p className="mt-8 text-center text-[13px] font-light text-negative">{error}</p>
+      ) : (
+        <p
+          className="rise-in mt-8 text-center text-[11px] uppercase tracking-[0.22em] text-stone"
+          style={{ animationDelay: "440ms" }}
+        >
+          {pending ? "Gjør klar kjøkkenet ditt…" : "Trykk for å fortsette"}
+        </p>
+      )}
     </main>
   );
 }

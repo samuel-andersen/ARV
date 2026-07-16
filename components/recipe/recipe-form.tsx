@@ -168,7 +168,7 @@ export function RecipeForm({
               <button
                 type="button"
                 onClick={() => setIngredients((p) => p.filter((_, idx) => idx !== i))}
-                className="tap ml-auto px-2 text-lg text-stone hover:text-negative"
+                className="tap ml-auto flex h-11 w-11 items-center justify-center text-lg text-stone hover:text-negative"
                 aria-label="Fjern ingrediens"
               >
                 ×
@@ -201,7 +201,7 @@ export function RecipeForm({
               <button
                 type="button"
                 onClick={() => setSteps((p) => p.filter((_, idx) => idx !== i))}
-                className="tap mt-3 px-2 text-lg text-stone hover:text-negative"
+                className="tap mt-1 flex h-11 w-11 shrink-0 items-center justify-center text-lg text-stone hover:text-negative"
                 aria-label="Fjern steg"
               >
                 ×

@@ -1,4 +1,5 @@
 import type { PageModel } from "@/lib/book/layout";
+import { pageCaption } from "@/lib/book/labels";
 
 /**
  * Page-accurate preview of the Editorial style. Paper-white pages on the Mist
@@ -182,7 +183,7 @@ export function SpreadPreview({ pages }: { pages: PageModel[] }) {
               <PageInner page={page} />
             </Paper>
             <p className="mt-2 text-center text-[10px] uppercase tracking-[0.22em] text-stone">
-              {page.kind === "recipe" ? page.template.replace(/_/g, " ") : page.kind}
+              {pageCaption(page)}
             </p>
           </div>
         ))}

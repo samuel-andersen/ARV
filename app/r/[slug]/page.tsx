@@ -44,6 +44,16 @@ export default async function PublicRecipePage({
         </Link>
       </div>
 
+      {recipe.image_url && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={recipe.image_url}
+          alt={recipe.title}
+          decoding="async"
+          className="mt-8 aspect-[3/2] w-full object-cover"
+        />
+      )}
+
       <h1 className="serif mt-8 text-[40px] font-normal leading-[1.05] text-ink">
         {recipe.title}
       </h1>

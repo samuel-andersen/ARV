@@ -11,6 +11,7 @@ import type { BookWithContent, Contributor } from "@/lib/data/books";
 import type { RecipeListItem } from "@/lib/data/recipes";
 import type { PageModel } from "@/lib/book/layout";
 import { deriveSignals, validTemplatesFor } from "@/lib/book/template-selection";
+import { STYLE_LABEL, TEMPLATE_LABEL } from "@/lib/book/labels";
 import type { PageTemplate } from "@/lib/schemas/common";
 import {
   addChapter,
@@ -65,7 +66,7 @@ export function BookBuilder({
       {/* Header */}
       <div className="flex items-start justify-between gap-6">
         <div>
-          <Eyebrow>{isOwner ? `Bokbygger · ${book.style}` : "Bidrar til"}</Eyebrow>
+          <Eyebrow>{isOwner ? `Bokbygger · ${STYLE_LABEL[book.style as keyof typeof STYLE_LABEL] ?? book.style}` : "Bidrar til"}</Eyebrow>
           <h1 className="serif mt-3 text-[27px] font-normal text-ink">{book.title}</h1>
           {book.subtitle && <p className="mt-1 font-light text-stone">{book.subtitle}</p>}
         </div>
@@ -184,12 +185,12 @@ export function BookBuilder({
                       className="flex items-center gap-3 border-b border-line py-3"
                     >
                       {isOwner ? (
-                        <div className="flex flex-col">
+                        <div className="flex shrink-0 flex-col">
                           <button
                             type="button"
                             disabled={i === 0}
                             onClick={() => run(() => moveRecipe(book.id, ch.id, p.recipe.id, "up"))}
-                            className="text-xs text-stone hover:text-gran disabled:text-fog"
+                            className="tap flex h-6 w-9 items-center justify-center text-xs text-stone hover:text-gran disabled:text-fog"
                             aria-label="Flytt opp"
                           >
                             ▲
@@ -198,14 +199,14 @@ export function BookBuilder({
                             type="button"
                             disabled={i === ch.recipes.length - 1}
                             onClick={() => run(() => moveRecipe(book.id, ch.id, p.recipe.id, "down"))}
-                            className="text-xs text-stone hover:text-gran disabled:text-fog"
+                            className="tap flex h-6 w-9 items-center justify-center text-xs text-stone hover:text-gran disabled:text-fog"
                             aria-label="Flytt ned"
                           >
                             ▼
                           </button>
                         </div>
                       ) : null}
-                      <span className="flex-1 font-light text-ink">
+                      <span className="min-w-0 flex-1 truncate font-light text-ink">
                         {p.recipe.title}
                         {!isOwner && p.recipe.owner_id !== currentUserId && (
                           <span className="ml-2 text-[11px] uppercase tracking-[0.22em] text-stone">
@@ -226,12 +227,13 @@ export function BookBuilder({
                               ),
                             )
                           }
+                          aria-label={`Sidemal for ${p.recipe.title}`}
                           className="h-8 rounded-none border border-line bg-snow px-2 text-xs text-ink focus:border-gran focus:outline-none"
                         >
                           <option value="auto">Auto</option>
                           {valid.map((t) => (
                             <option key={t} value={t}>
-                              {t.replace(/_/g, " ")}
+                              {TEMPLATE_LABEL[t] ?? t.replace(/_/g, " ")}
                             </option>
                           ))}
                         </select>
@@ -240,7 +242,7 @@ export function BookBuilder({
                         <button
                           type="button"
                           onClick={() => run(() => removeRecipeFromChapter(book.id, ch.id, p.recipe.id))}
-                          className="px-1 text-stone hover:text-negative"
+                          className="tap flex h-9 w-9 shrink-0 items-center justify-center text-lg text-stone hover:text-negative"
                           aria-label="Fjern fra boken"
                         >
                           ×
@@ -342,7 +344,7 @@ function ContributorsPanel({
         <ul className="mt-4 flex flex-col">
           {contributors.map((c) => (
             <li
-              key={c.invited_email ?? c.user_id ?? Math.random()}
+              key={c.invited_email ?? c.user_id}
               className="flex items-center justify-between border-b border-line py-2.5"
             >
               <span className="font-light text-ink">
@@ -404,6 +406,7 @@ function AddRecipeControl({
         value={value}
         onChange={(e) => setValue(e.target.value)}
         disabled={disabled || options.length === 0}
+        aria-label="Legg til en oppskrift i kapittelet"
         className="h-9 flex-1 rounded-none border border-line bg-snow px-2 text-sm text-ink focus:border-gran focus:outline-none disabled:text-fog"
       >
         <option value="">{options.length ? "Legg til en oppskrift…" : "Alle oppskrifter er plassert"}</option>

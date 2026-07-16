@@ -125,7 +125,7 @@ export function RecipeImageUpload({
           type="button"
           onClick={() => inputRef.current?.click()}
           disabled={working}
-          className="tap absolute right-3 top-3 z-10 flex items-center gap-1.5 rounded-full bg-snow/85 px-3 py-1.5 text-[11px] font-medium text-gran shadow-sm backdrop-blur disabled:opacity-60"
+          className="tap absolute right-3 top-3 z-10 flex items-center gap-1.5 bg-snow/85 px-3 py-1.5 text-[11px] font-medium text-gran shadow-sm backdrop-blur disabled:opacity-60"
         >
           {working ? "Laster opp…" : "Bytt bilde"}
         </button>

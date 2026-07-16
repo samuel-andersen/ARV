@@ -67,7 +67,8 @@ export const viewport: Viewport = {
   themeColor: "#FBFAF8",
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
+  // Allow pinch-to-zoom (WCAG 1.4.4) — accessibility over locking scale.
+  maximumScale: 5,
   // Draw under the notch/home indicator so chrome can use safe-area insets.
   viewportFit: "cover",
 };

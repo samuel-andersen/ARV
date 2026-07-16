@@ -75,7 +75,7 @@ function draftToInitial(draft: ImportDraft): RecipeFormInitial {
 }
 
 export function ImportFlow({ initialUrl }: { initialUrl?: string }) {
-  const [mode, setMode] = useState<Mode>(initialUrl ? "url" : "url");
+  const [mode, setMode] = useState<Mode>("url");
   const [url, setUrl] = useState(initialUrl ?? "");
   const [text, setText] = useState("");
   const [error, setError] = useState<string | null>(null);

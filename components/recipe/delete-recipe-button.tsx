@@ -10,16 +10,27 @@ import { tapHaptic } from "@/lib/haptics";
  */
 export function DeleteRecipeButton({ id }: { id: string }) {
   const [armed, setArmed] = useState(false);
+  const [error, setError] = useState(false);
   const [pending, startTransition] = useTransition();
 
   function onClick() {
     tapHaptic();
     if (!armed) {
+      setError(false);
       setArmed(true);
       setTimeout(() => setArmed(false), 4000);
       return;
     }
-    startTransition(() => void deleteRecipe(id));
+    startTransition(async () => {
+      try {
+        await deleteRecipe(id);
+      } catch {
+        // Success throws a redirect (handled by the framework); a real failure
+        // lands here so the button recovers instead of hanging on "Sletter…".
+        setError(true);
+        setArmed(false);
+      }
+    });
   }
 
   return (
@@ -29,10 +40,16 @@ export function DeleteRecipeButton({ id }: { id: string }) {
       disabled={pending}
       className={
         "tap text-[11px] font-medium uppercase tracking-[0.22em] transition-colors " +
-        (armed ? "text-negative" : "text-stone hover:text-negative")
+        (armed || error ? "text-negative" : "text-stone hover:text-negative")
       }
     >
-      {pending ? "Sletter…" : armed ? "Bekreft sletting" : "Slett oppskrift"}
+      {pending
+        ? "Sletter…"
+        : error
+          ? "Kunne ikke slette — prøv igjen"
+          : armed
+            ? "Bekreft sletting"
+            : "Slett oppskrift"}
     </button>
   );
 }

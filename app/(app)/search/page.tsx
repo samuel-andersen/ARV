@@ -37,6 +37,7 @@ export default async function SearchPage({
           autoFocus
           autoCapitalize="none"
           enterKeyHint="search"
+          aria-label="Søk etter oppskrift, ingrediens eller konto"
           placeholder="Oppskrift, ingrediens eller @konto"
           className="min-w-0 flex-1 border-none bg-transparent text-[16px] text-ink placeholder:text-stone/70 focus:outline-none"
         />

@@ -101,7 +101,7 @@ export default async function RecipePage({
         )}
 
         {/* Edit bar — Rediger · Vis originalen · Lag min variant. */}
-        <RecipeActions recipeId={recipe.id} sourceRaw={sourceRaw} tags={recipe.tags} />
+        <RecipeActions recipeId={recipe.id} sourceRaw={sourceRaw} tags={recipe.tags} canEdit={isOwner} />
 
         <RecipeBody
           baseServings={recipe.servings}
@@ -161,7 +161,7 @@ export default async function RecipePage({
             href="/books"
             className="tap flex items-center justify-center border border-line px-4 text-[13px] font-medium text-gran transition-colors hover:border-gran"
           >
-            + Boken
+            Til bøkene
           </Link>
         </div>
 

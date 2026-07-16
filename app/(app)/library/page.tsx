@@ -59,6 +59,7 @@ export default async function LibraryPage({
           autoCorrect="off"
           spellCheck={false}
           enterKeyHint="go"
+          aria-label="Lim inn en lenke å hente oppskrift fra"
           placeholder="Lim inn lenke — Instagram, TikTok, YouTube"
           className="min-w-0 flex-1 border border-r-0 border-line bg-snow px-4 py-[15px] text-[16px] text-ink placeholder:text-stone/70 focus:border-gran focus:outline-none"
         />
@@ -77,6 +78,7 @@ export default async function LibraryPage({
           name="q"
           defaultValue={q ?? ""}
           enterKeyHint="search"
+          aria-label="Søk i biblioteket"
           placeholder="Søk i biblioteket"
           className="w-full border border-line bg-transparent px-4 py-3 text-[16px] text-ink placeholder:text-stone/70 focus:border-gran focus:outline-none"
         />

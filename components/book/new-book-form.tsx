@@ -6,6 +6,7 @@ import { Input, Textarea } from "@/components/ui/input";
 import { Field } from "@/components/ui/field";
 import { createBook } from "@/lib/actions/books";
 import { bookStyleEnum, type BookStyle } from "@/lib/schemas/common";
+import { STYLE_LABEL } from "@/lib/book/labels";
 import { cn } from "@/lib/utils";
 
 const STYLE_NOTES: Record<BookStyle, string> = {
@@ -66,7 +67,7 @@ export function NewBookForm() {
                   disabled ? "cursor-not-allowed text-fog" : "hover:bg-mist",
                 )}
               >
-                <span className={cn("text-sm capitalize", disabled ? "text-fog" : "text-ink")}>{s}</span>
+                <span className={cn("text-sm", disabled ? "text-fog" : "text-ink")}>{STYLE_LABEL[s]}</span>
                 <p className={cn("mt-1 text-xs font-light", style === s ? "text-gran" : "text-stone")}>
                   {STYLE_NOTES[s]}
                 </p>

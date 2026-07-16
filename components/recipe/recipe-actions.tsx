@@ -14,10 +14,13 @@ export function RecipeActions({
   recipeId,
   sourceRaw,
   tags,
+  canEdit = true,
 }: {
   recipeId: string;
   sourceRaw: string | null;
   tags: string[];
+  /** Only the owner may edit in place; others can still fork "min variant". */
+  canEdit?: boolean;
 }) {
   const [showOriginal, setShowOriginal] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -35,9 +38,11 @@ export function RecipeActions({
   return (
     <div className="flex flex-col gap-3">
       <div className="flex flex-wrap items-center gap-x-5 gap-y-2 border-y border-line py-2.5">
-        <Link href={`/recipes/${recipeId}/edit`} className="text-xs font-medium text-gran hover:text-ink">
-          Rediger
-        </Link>
+        {canEdit && (
+          <Link href={`/recipes/${recipeId}/edit`} className="text-xs font-medium text-gran hover:text-ink">
+            Rediger
+          </Link>
+        )}
         {sourceRaw && (
           <button
             type="button"

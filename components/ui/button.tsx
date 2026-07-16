@@ -10,12 +10,16 @@ type Variant = "primary" | "secondary" | "ghost";
 
 const base =
   "inline-flex items-center justify-center gap-2 h-11 px-5 text-sm font-medium " +
-  "rounded-none transition-colors duration-150 ease-[cubic-bezier(0.4,0,0.2,1)] " +
+  "rounded-none transition-[transform,opacity,colors] duration-150 ease-[cubic-bezier(0.4,0,0.2,1)] " +
+  "active:scale-[0.97] " +
   "focus-visible:outline-2 focus-visible:outline-gran focus-visible:outline-offset-2 " +
-  "disabled:pointer-events-none disabled:bg-fog disabled:text-stone";
+  "disabled:pointer-events-none disabled:scale-100 disabled:bg-fog disabled:text-stone";
 
+// Gran is the only interactive color; the primary action darkens/settles on
+// press. Hover is a gentle opacity fade — the same treatment used across every
+// hand-rolled Gran CTA, so all primary buttons feel identical.
 const variants: Record<Variant, string> = {
-  primary: "bg-gran text-snow hover:bg-ink",
+  primary: "bg-gran text-snow hover:opacity-90",
   secondary: "bg-snow text-ink border border-line hover:border-gran hover:text-gran",
   ghost: "bg-transparent text-gran hover:text-ink",
 };

@@ -2,10 +2,11 @@ export default function AccountLoading() {
   return (
     <div className="max-w-xl">
       <div className="flex items-center gap-4 pt-2">
-        <div className="skeleton h-14 w-14 shrink-0" />
+        <div className="skeleton h-[72px] w-[72px] shrink-0" />
         <div className="flex-1">
           <div className="skeleton h-6 w-40" />
           <div className="skeleton mt-2 h-3 w-56" />
+          <div className="skeleton mt-2 h-3 w-24" />
         </div>
       </div>
       <div className="mt-6 grid grid-cols-3 gap-px border-y border-line bg-line">
