@@ -31,6 +31,21 @@ export const metadata: Metadata = {
   applicationName: "Arv",
   metadataBase: new URL("https://arv.kitchen"),
   manifest: "/manifest.webmanifest",
+  openGraph: {
+    type: "website",
+    siteName: "Arv",
+    locale: "nb_NO",
+    title: "Arv — Fra feed til familiearv",
+    description:
+      "Oppskrifter fra sosiale medier og eget kjøkken, til en trykt innbundet kokebok med familiens navn på ryggen.",
+    images: [{ url: "/brand/og-image.png", width: 1200, height: 630, alt: "Arv — Fra feed til familiearv" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Arv — Fra feed til familiearv",
+    description: "Oppskrifter fra sosiale medier og eget kjøkken, til en trykt innbundet kokebok.",
+    images: ["/brand/og-image.png"],
+  },
   icons: {
     icon: [
       { url: "/favicon.png", sizes: "48x48", type: "image/png" },

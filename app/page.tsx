@@ -308,7 +308,10 @@ export default function Home() {
       <footer className="border-t border-line bg-papir px-5 py-8 sm:px-[clamp(20px,5vw,60px)]">
         <div className="mx-auto flex max-w-[1240px] flex-wrap items-center justify-between gap-4">
           <span className={`${label} !tracking-[0.34em] text-[13px]`}>ARV</span>
-          <div className="flex items-center gap-7">
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+            <Link href="/brand" className="text-[13px] font-light text-stone hover:text-gran">
+              Grafisk profil
+            </Link>
             <span className="text-[13px] font-light text-stone">
               arv.kitchen — Laget i Norge — © 2026
             </span>
