@@ -139,7 +139,7 @@ export function AppShell({
       {/* Floating bottom nav — translucent Papir material, Gran only for the
           active tab and the raised import button. */}
       <nav
-        className="nav-float fixed inset-x-4 z-40 flex items-center justify-between px-6 py-2.5"
+        className="nav-float fixed left-1/2 z-40 flex w-[calc(100%-2rem)] max-w-md -translate-x-1/2 items-center justify-between px-6 py-2.5"
         style={{ bottom: "calc(20px + var(--safe-bottom))", borderRadius: "22px" }}
         aria-label="Hovedmeny"
       >
