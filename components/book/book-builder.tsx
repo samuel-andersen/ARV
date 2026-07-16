@@ -84,8 +84,8 @@ export function BookBuilder({
           >
             {showPreview ? "Skjul forhåndsvisning" : "Vis forhåndsvisning"}
           </button>
-          <Link href={`/api/books/${book.id}/pdf`} prefetch={false}>
-            <Button>Last ned trykkeklar PDF</Button>
+          <Link href={`/books/${book.id}/print`}>
+            <Button>Gjør klar for trykk</Button>
           </Link>
         </div>
       </div>

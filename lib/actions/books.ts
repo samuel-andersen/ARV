@@ -234,3 +234,26 @@ export async function deleteBook(id: string) {
   revalidatePath("/books");
   redirect("/books");
 }
+
+/**
+ * Place a print order for a book (fulfillment is stubbed). Records the order
+ * and marks the book "ordered", then lands on the confirmation.
+ */
+export async function orderBook(bookId: string): Promise<{ error?: string }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Du må være logget inn." };
+
+  const { error } = await supabase
+    .from("orders")
+    .insert({ book_id: bookId, status: "submitted" });
+  if (error) return { error: error.message };
+
+  await supabase.from("books").update({ status: "ordered" }).eq("id", bookId);
+
+  revalidatePath(`/books/${bookId}`);
+  revalidatePath(`/books/${bookId}/print`);
+  redirect(`/books/${bookId}/print`);
+}

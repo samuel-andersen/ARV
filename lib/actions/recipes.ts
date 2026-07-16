@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { recipeInputSchema, type RecipeInput } from "@/lib/schemas/recipe";
 import { upsertRecipeTags, writeRecipeChildren } from "@/lib/data/recipe-write";
+import { getRecipe } from "@/lib/data/recipes";
 
 export interface RecipeActionResult {
   error?: string;
@@ -152,6 +153,58 @@ export async function setRecipeSharing(
 
   revalidatePath(`/recipes/${id}`);
   return { slug };
+}
+
+/**
+ * "Lag min variant" — duplicate a recipe as the user's own editable copy,
+ * keeping source attribution. The original is left untouched.
+ */
+export async function createVariant(id: string): Promise<RecipeActionResult> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Du må være logget inn." };
+
+  const orig = await getRecipe(id);
+  if (!orig) return { error: "Fant ikke oppskriften." };
+
+  const { data: created, error } = await supabase
+    .from("recipes")
+    .insert({
+      owner_id: user.id,
+      title: `${orig.title} — min variant`,
+      description: orig.description,
+      story: orig.story,
+      servings: orig.servings,
+      prep_min: orig.prep_min,
+      cook_min: orig.cook_min,
+      image_url: orig.image_url,
+      source_platform: orig.source_platform,
+      source_url: orig.source_url,
+      source_author: orig.source_author,
+      source_raw: (orig as unknown as { source_raw?: string | null }).source_raw ?? null,
+      is_original: orig.is_original,
+      normalized: true,
+    })
+    .select("id")
+    .single();
+  if (error || !created) return { error: error?.message ?? "Kunne ikke lage variant." };
+
+  await writeRecipeChildren(supabase, created.id, {
+    ingredients: orig.ingredients.map((i) => ({
+      quantity: i.quantity,
+      unit: i.unit,
+      name: i.name,
+      note: i.note,
+      needs_review: i.needs_review,
+    })),
+    steps: orig.steps.map((s) => ({ text: s.text, timer_seconds: s.timer_seconds })),
+  });
+  await upsertRecipeTags(supabase, created.id, orig.tags);
+
+  revalidatePath("/library");
+  redirect(`/recipes/${created.id}`);
 }
 
 export async function deleteRecipe(id: string) {

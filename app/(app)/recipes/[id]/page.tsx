@@ -1,12 +1,14 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getRecipe } from "@/lib/data/recipes";
+import { getRecipe, getRecipeNotes } from "@/lib/data/recipes";
 import { RecipeBody } from "@/components/recipe/recipe-body";
 import { ShareToggle } from "@/components/recipe/share-toggle";
 import { CookModeLauncher } from "@/components/recipe/cook-mode";
 import { BackButton } from "@/components/app/back-button";
 import { DeleteRecipeButton } from "@/components/recipe/delete-recipe-button";
 import { SourceQr } from "@/components/recipe/source-qr";
+import { RecipeActions } from "@/components/recipe/recipe-actions";
+import { RecipeNotes } from "@/components/recipe/recipe-notes";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
@@ -29,6 +31,8 @@ export default async function RecipePage({
   const { id } = await params;
   const recipe = await getRecipe(id);
   if (!recipe) notFound();
+  const notes = await getRecipeNotes(id);
+  const sourceRaw = (recipe as unknown as { source_raw?: string | null }).source_raw ?? null;
 
   const time = totalTime(recipe.prep_min, recipe.cook_min);
   const credit = recipe.is_original
@@ -75,25 +79,17 @@ export default async function RecipePage({
           </p>
         )}
 
-        {/* Edit bar. */}
-        <div className="flex items-center gap-5 border-y border-line py-2.5">
-          <Link href={`/recipes/${id}/edit`} className="text-xs font-medium text-gran hover:text-ink">
-            Rediger
-          </Link>
-          {recipe.tags.length > 0 && (
-            <span className="ml-auto flex flex-wrap gap-x-3 text-[11px] font-light text-stone">
-              {recipe.tags.map((t) => (
-                <span key={t}>#{t}</span>
-              ))}
-            </span>
-          )}
-        </div>
+        {/* Edit bar — Rediger · Vis originalen · Lag min variant. */}
+        <RecipeActions recipeId={recipe.id} sourceRaw={sourceRaw} tags={recipe.tags} />
 
         <RecipeBody
           baseServings={recipe.servings}
           ingredients={recipe.ingredients}
           steps={recipe.steps}
         />
+
+        {/* Mine notater — printed in the book's margin. */}
+        <RecipeNotes recipeId={recipe.id} notes={notes} />
 
         {/* Share. */}
         <div className="mt-2">

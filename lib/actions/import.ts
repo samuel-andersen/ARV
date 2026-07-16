@@ -130,12 +130,25 @@ export async function confirmImport(input: {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return { error: "You must be signed in." };
+  if (!user) return { error: "Du må være logget inn." };
+
+  // Preserve the original imported text for "Vis originalen".
+  let sourceRaw: string | null = null;
+  if (jobId) {
+    const { data: job } = await supabase
+      .from("import_jobs")
+      .select("raw_caption, transcript")
+      .eq("id", jobId)
+      .maybeSingle();
+    sourceRaw =
+      [job?.raw_caption, job?.transcript].filter(Boolean).join("\n\n").trim() || null;
+  }
 
   const { data: created, error } = await supabase
     .from("recipes")
     .insert({
       owner_id: user.id,
+      source_raw: sourceRaw,
       title: recipe.title,
       description: recipe.description,
       story: recipe.story,

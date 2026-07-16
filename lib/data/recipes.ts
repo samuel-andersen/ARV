@@ -84,6 +84,32 @@ export async function listRecipes(query?: string): Promise<RecipeListItem[]> {
   });
 }
 
+/** A margin note on a recipe. */
+export interface RecipeNote {
+  id: string;
+  body: string;
+  created_at: string;
+  authorName: string | null;
+}
+
+/** Load a recipe's margin notes, oldest first. */
+export async function getRecipeNotes(recipeId: string): Promise<RecipeNote[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("recipe_notes")
+    .select("id, body, created_at, profiles(display_name)")
+    .eq("recipe_id", recipeId)
+    .order("created_at", { ascending: true });
+  if (error) return [];
+  return (data ?? []).map((n) => ({
+    id: n.id as string,
+    body: n.body as string,
+    created_at: n.created_at as string,
+    authorName:
+      (n.profiles as unknown as { display_name: string | null } | null)?.display_name ?? null,
+  }));
+}
+
 /** Load a single recipe with its ingredients, steps, and tags. */
 export async function getRecipe(id: string): Promise<RecipeWithChildren | null> {
   return loadRecipe("id", id);
