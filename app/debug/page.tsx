@@ -55,28 +55,44 @@ export default async function DebugPage() {
     rows.push(["profile visible under RLS", prof ? "YES" : "NO"]);
     if (profErr) rows.push(["profile read error", profErr.message]);
 
-    // Live insert probe — rolled back immediately.
-    const { data: ins, error: insErr } = await supabase
+    const base = {
+      title: "__debug_probe__",
+      servings: 1,
+      source_platform: "manual",
+      is_original: true,
+      normalized: true,
+    };
+
+    // Probe A — plain INSERT, NO returning. Does not trigger the SELECT policy.
+    const { error: errA } = await supabase
       .from("recipes")
-      .insert({
-        owner_id: user.id,
-        title: "__debug_probe__",
-        servings: 1,
-        source_platform: "manual",
-        is_original: true,
-        normalized: true,
-      })
+      .insert({ owner_id: user.id, ...base, title: "__probeA__" });
+    rows.push(["A: insert (no returning)", errA ? `FAILED ${errA.code ?? ""}: ${errA.message}` : "OK ✓"]);
+
+    // If A worked, read back the row to see what owner_id actually got stored.
+    if (!errA) {
+      const { data: back } = await supabase
+        .from("recipes")
+        .select("id, owner_id")
+        .eq("title", "__probeA__")
+        .maybeSingle();
+      rows.push(["A: stored owner_id", back?.owner_id ?? "— (null / not readable)"]);
+      rows.push(["A: matches your id", back?.owner_id === user.id ? "YES ✓" : "NO ✗"]);
+      // Clean up (delete by owner regardless of readback).
+      await supabase.from("recipes").delete().eq("title", "__probeA__");
+    }
+
+    // Probe B — INSERT ... RETURNING. Also enforces the SELECT (can_read_recipe) policy.
+    const { data: insB, error: errB } = await supabase
+      .from("recipes")
+      .insert({ owner_id: user.id, ...base, title: "__probeB__" })
       .select("id")
       .single();
-    if (insErr) {
-      rows.push(["INSERT probe", "FAILED"]);
-      rows.push(["INSERT error", insErr.message]);
-      rows.push(["INSERT code", insErr.code ?? "—"]);
-      rows.push(["INSERT details", insErr.details ?? "—"]);
+    if (errB) {
+      rows.push(["B: insert + returning", `FAILED ${errB.code ?? ""}: ${errB.message}`]);
     } else {
-      rows.push(["INSERT probe", "OK ✓ (RLS passes)"]);
-      await supabase.from("recipes").delete().eq("id", ins.id);
-      rows.push(["cleanup", "probe row deleted"]);
+      rows.push(["B: insert + returning", "OK ✓"]);
+      await supabase.from("recipes").delete().eq("id", insB.id);
     }
   }
 
