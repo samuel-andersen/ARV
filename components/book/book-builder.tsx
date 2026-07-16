@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input, Textarea } from "@/components/ui/input";
 import { Eyebrow } from "@/components/ui/label";
 import { SpreadPreview } from "@/components/book/spread-preview";
+import { BookReader } from "@/components/book/book-reader";
 import type { BookWithContent, Contributor } from "@/lib/data/books";
 import type { RecipeListItem } from "@/lib/data/recipes";
 import type { PageModel } from "@/lib/book/layout";
@@ -43,6 +44,7 @@ export function BookBuilder({
 }) {
   const [pending, startTransition] = useTransition();
   const [showPreview, setShowPreview] = useState(true);
+  const [reading, setReading] = useState(false);
   const [newChapter, setNewChapter] = useState("");
   const [details, setDetails] = useState({
     title: book.title,
@@ -70,8 +72,15 @@ export function BookBuilder({
         <div className="flex shrink-0 items-center gap-4">
           <button
             type="button"
-            onClick={() => setShowPreview((s) => !s)}
+            onClick={() => setReading(true)}
             className="text-sm font-light text-gran hover:text-ink"
+          >
+            Les boken
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowPreview((s) => !s)}
+            className="hidden text-sm font-light text-gran hover:text-ink sm:inline"
           >
             {showPreview ? "Skjul forhåndsvisning" : "Vis forhåndsvisning"}
           </button>
@@ -80,6 +89,10 @@ export function BookBuilder({
           </Link>
         </div>
       </div>
+
+      {reading && (
+        <BookReader pages={pages} title={book.title} onClose={() => setReading(false)} />
+      )}
 
       {/* Preflight line */}
       <div

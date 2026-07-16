@@ -9,7 +9,7 @@ import type { PageModel } from "@/lib/book/layout";
 
 const book = { fontFamily: "var(--font-book)" } as const;
 
-function Paper({ children }: { children: React.ReactNode }) {
+export function Paper({ children }: { children: React.ReactNode }) {
   return (
     <div
       className="relative aspect-[4/5] w-full overflow-hidden bg-white"
@@ -75,14 +75,14 @@ function RecipePageInner({ page }: { page: Extract<PageModel, { kind: "recipe" }
 
       {attribution && (attribution.author || attribution.url) && (
         <p style={book} className="mt-[3%] text-[clamp(5px,1.2cqw,8px)] text-stone">
-          via {attribution.author ?? attribution.platform}
+          Etter {attribution.author ?? attribution.platform}
         </p>
       )}
     </div>
   );
 }
 
-function PageInner({ page }: { page: PageModel }) {
+export function PageInner({ page }: { page: PageModel }) {
   switch (page.kind) {
     case "cover":
       return (
@@ -110,7 +110,7 @@ function PageInner({ page }: { page: PageModel }) {
     case "toc":
       return (
         <div className="h-full p-[8%]">
-          <p className="text-[clamp(6px,1.4cqw,10px)] uppercase tracking-[0.22em] text-stone">Contents</p>
+          <p className="text-[clamp(6px,1.4cqw,10px)] uppercase tracking-[0.22em] text-stone">Innhold</p>
           <div className="mt-[6%] flex flex-col gap-[3%]">
             {page.entries.map((e, i) => (
               <div key={i}>
@@ -124,7 +124,7 @@ function PageInner({ page }: { page: PageModel }) {
       return (
         <div className="flex h-full flex-col justify-center p-[10%]">
           <p className="text-[clamp(6px,1.4cqw,10px)] uppercase tracking-[0.22em] text-gran">
-            Chapter {page.index}
+            Kapittel {page.index}
           </p>
           <h2 style={book} className="mt-2 text-[clamp(16px,4cqw,32px)] font-light text-ink">{page.title}</h2>
           {page.introText && (
@@ -139,7 +139,7 @@ function PageInner({ page }: { page: PageModel }) {
     case "index":
       return (
         <div className="h-full p-[8%]">
-          <p className="text-[clamp(6px,1.4cqw,10px)] uppercase tracking-[0.22em] text-stone">Index</p>
+          <p className="text-[clamp(6px,1.4cqw,10px)] uppercase tracking-[0.22em] text-stone">Register</p>
           <div className="mt-[6%] columns-2 gap-[6%]">
             {page.entries.map((e) => (
               <p key={e} style={book} className="text-[clamp(6px,1.4cqw,9px)] leading-snug text-ink">{e}</p>
