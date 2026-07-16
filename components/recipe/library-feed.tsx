@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { FeedCard } from "@/components/recipe/recipe-cards";
+import { FlipFeedCard } from "@/components/recipe/flip-feed-card";
 import { tapHaptic } from "@/lib/haptics";
 import { cn } from "@/lib/utils";
 import type { RecipeListItem } from "@/lib/data/recipes";
@@ -53,10 +53,10 @@ export function LibraryFeed({ recipes }: { recipes: RecipeListItem[] }) {
         </span>
       </div>
 
-      <ul className="mt-4 grid grid-cols-2 gap-4 lg:grid-cols-3">
+      <ul className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {shown.map((r) => (
           <li key={r.id}>
-            <FeedCard recipe={r} />
+            <FlipFeedCard recipe={r} />
           </li>
         ))}
       </ul>

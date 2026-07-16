@@ -2,7 +2,13 @@ import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import type { RecipeWithChildren } from "@/lib/schemas/recipe";
 
-/** A recipe list row — enough to render a library card. */
+/** A short ingredient preview for the flip-card back. */
+export interface IngredientPreview {
+  name: string;
+  amount: string;
+}
+
+/** A recipe list row — enough to render a library card (front + flip back). */
 export interface RecipeListItem {
   id: string;
   title: string;
@@ -15,6 +21,19 @@ export interface RecipeListItem {
   servings: number;
   ingredientCount: number;
   tags: string[];
+  /** First few ingredients, for the card back. */
+  previewIngredients: IngredientPreview[];
+  /** First method step, for the card back. */
+  firstStep: string | null;
+}
+
+type RawIngredient = { name: string; quantity: number | null; unit: string | null; position: number };
+type RawStep = { text: string; position: number };
+
+function fmtAmount(q: number | null, unit: string | null): string {
+  if (q == null) return unit ?? "";
+  const n = Math.round(q * 100) / 100;
+  return unit ? `${n} ${unit}` : String(n);
 }
 
 /** List the current user's recipes, newest first, with an optional text query. */
@@ -23,7 +42,7 @@ export async function listRecipes(query?: string): Promise<RecipeListItem[]> {
   let q = supabase
     .from("recipes")
     .select(
-      "id, title, description, image_url, source_platform, source_author, is_original, normalized, servings, ingredients(count), recipe_tags(tags(name))",
+      "id, title, description, image_url, source_platform, source_author, is_original, normalized, servings, ingredients(name, quantity, unit, position), steps(text, position), recipe_tags(tags(name))",
     )
     .order("created_at", { ascending: false });
 
@@ -35,7 +54,12 @@ export async function listRecipes(query?: string): Promise<RecipeListItem[]> {
   if (error) throw error;
 
   return (data ?? []).map((r) => {
-    const ingredients = r.ingredients as unknown as { count: number }[];
+    const ingredients = [...((r.ingredients ?? []) as unknown as RawIngredient[])].sort(
+      (a, b) => a.position - b.position,
+    );
+    const steps = [...((r.steps ?? []) as unknown as RawStep[])].sort(
+      (a, b) => a.position - b.position,
+    );
     const tags = ((r.recipe_tags ?? []) as unknown as { tags: { name: string } | null }[])
       .map((rt) => rt.tags?.name)
       .filter((n): n is string => !!n);
@@ -49,8 +73,13 @@ export async function listRecipes(query?: string): Promise<RecipeListItem[]> {
       is_original: r.is_original,
       normalized: r.normalized,
       servings: r.servings,
-      ingredientCount: ingredients?.[0]?.count ?? 0,
+      ingredientCount: ingredients.length,
       tags,
+      previewIngredients: ingredients.slice(0, 3).map((i) => ({
+        name: i.name,
+        amount: fmtAmount(i.quantity, i.unit),
+      })),
+      firstStep: steps[0]?.text ?? null,
     };
   });
 }
