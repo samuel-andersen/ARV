@@ -63,8 +63,8 @@ export function BookBuilder({
       {/* Header */}
       <div className="flex items-start justify-between gap-6">
         <div>
-          <Eyebrow>{isOwner ? `Book builder · ${book.style}` : "Contributing to"}</Eyebrow>
-          <h1 className="mt-3 text-3xl font-light text-ink">{book.title}</h1>
+          <Eyebrow>{isOwner ? `Bokbygger · ${book.style}` : "Bidrar til"}</Eyebrow>
+          <h1 className="serif mt-3 text-[27px] font-normal text-ink">{book.title}</h1>
           {book.subtitle && <p className="mt-1 font-light text-stone">{book.subtitle}</p>}
         </div>
         <div className="flex shrink-0 items-center gap-4">
@@ -73,10 +73,10 @@ export function BookBuilder({
             onClick={() => setShowPreview((s) => !s)}
             className="text-sm font-light text-gran hover:text-ink"
           >
-            {showPreview ? "Hide preview" : "Show preview"}
+            {showPreview ? "Skjul forhåndsvisning" : "Vis forhåndsvisning"}
           </button>
           <Link href={`/api/books/${book.id}/pdf`} prefetch={false}>
-            <Button>Download print-ready PDF</Button>
+            <Button>Last ned trykkeklar PDF</Button>
           </Link>
         </div>
       </div>
@@ -89,10 +89,10 @@ export function BookBuilder({
         )}
       >
         {belowMin
-          ? `Estimated ${pageCount} pages — a hardcover needs at least 24. Add more recipes.`
+          ? `Anslått ${pageCount} sider — en innbundet bok trenger minst 24. Legg til flere oppskrifter.`
           : aboveMax
-            ? `Estimated ${pageCount} pages — over the 200-page maximum. Split the book.`
-            : `Estimated ${pageCount} pages · trim ${book.trim_size} cm · 300 DPI target`}
+            ? `Anslått ${pageCount} sider — over maksimum på 200. Del opp boken.`
+            : `Anslått ${pageCount} sider · format ${book.trim_size} cm · mål 300 DPI`}
       </div>
 
       <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_1.1fr]">
@@ -101,23 +101,23 @@ export function BookBuilder({
           {/* Details — owner only */}
           {isOwner && (
           <section className="border border-line p-5">
-            <Eyebrow>Cover &amp; dedication</Eyebrow>
+            <Eyebrow>Omslag og dedikasjon</Eyebrow>
             <div className="mt-4 flex flex-col gap-3">
               <Input
                 value={details.title}
                 onChange={(e) => setDetails((d) => ({ ...d, title: e.target.value }))}
-                placeholder="Title"
+                placeholder="Tittel"
               />
               <Input
                 value={details.subtitle}
                 onChange={(e) => setDetails((d) => ({ ...d, subtitle: e.target.value }))}
-                placeholder="Subtitle"
+                placeholder="Undertittel"
               />
               <Textarea
                 rows={2}
                 value={details.dedication}
                 onChange={(e) => setDetails((d) => ({ ...d, dedication: e.target.value }))}
-                placeholder="Dedication"
+                placeholder="Dedikasjon"
               />
               <div>
                 <Button
@@ -133,7 +133,7 @@ export function BookBuilder({
                     )
                   }
                 >
-                  Save details
+                  Lagre detaljer
                 </Button>
               </div>
             </div>
@@ -156,7 +156,7 @@ export function BookBuilder({
                     onClick={() => run(() => deleteChapter(book.id, ch.id))}
                     className="text-[11px] font-medium uppercase tracking-[0.22em] text-stone hover:text-negative"
                   >
-                    Remove chapter
+                    Fjern kapittel
                   </button>
                 )}
               </div>
@@ -177,7 +177,7 @@ export function BookBuilder({
                             disabled={i === 0}
                             onClick={() => run(() => moveRecipe(book.id, ch.id, p.recipe.id, "up"))}
                             className="text-xs text-stone hover:text-gran disabled:text-fog"
-                            aria-label="Move up"
+                            aria-label="Flytt opp"
                           >
                             ▲
                           </button>
@@ -186,7 +186,7 @@ export function BookBuilder({
                             disabled={i === ch.recipes.length - 1}
                             onClick={() => run(() => moveRecipe(book.id, ch.id, p.recipe.id, "down"))}
                             className="text-xs text-stone hover:text-gran disabled:text-fog"
-                            aria-label="Move down"
+                            aria-label="Flytt ned"
                           >
                             ▼
                           </button>
@@ -196,7 +196,7 @@ export function BookBuilder({
                         {p.recipe.title}
                         {!isOwner && p.recipe.owner_id !== currentUserId && (
                           <span className="ml-2 text-[11px] uppercase tracking-[0.22em] text-stone">
-                            by another
+                            av en annen
                           </span>
                         )}
                       </span>
@@ -228,7 +228,7 @@ export function BookBuilder({
                           type="button"
                           onClick={() => run(() => removeRecipeFromChapter(book.id, ch.id, p.recipe.id))}
                           className="px-1 text-stone hover:text-negative"
-                          aria-label="Remove from book"
+                          aria-label="Fjern fra boken"
                         >
                           ×
                         </button>
@@ -237,7 +237,7 @@ export function BookBuilder({
                   );
                 })}
                 {ch.recipes.length === 0 && (
-                  <li className="py-3 text-sm font-light text-stone">No recipes yet.</li>
+                  <li className="py-3 text-sm font-light text-stone">Ingen oppskrifter ennå.</li>
                 )}
               </ul>
 
@@ -255,12 +255,12 @@ export function BookBuilder({
           {isOwner && (
             <section className="flex items-end gap-3">
               <div className="flex-1">
-                <Eyebrow>New chapter</Eyebrow>
+                <Eyebrow>Nytt kapittel</Eyebrow>
                 <Input
                   className="mt-2"
                   value={newChapter}
                   onChange={(e) => setNewChapter(e.target.value)}
-                  placeholder="Mornings"
+                  placeholder="Morgener"
                 />
               </div>
               <Button
@@ -273,7 +273,7 @@ export function BookBuilder({
                   run(() => addChapter(book.id, { title }));
                 }}
               >
-                Add chapter
+                Legg til kapittel
               </Button>
             </section>
           )}
@@ -282,7 +282,7 @@ export function BookBuilder({
         {/* Right: live preview */}
         {showPreview && (
           <div className="lg:sticky lg:top-6 lg:self-start">
-            <Eyebrow>Live preview</Eyebrow>
+            <Eyebrow>Direkte forhåndsvisning</Eyebrow>
             <div className="mt-4 max-h-[80vh] overflow-y-auto border border-line">
               <SpreadPreview pages={pages} />
             </div>
@@ -319,10 +319,10 @@ function ContributorsPanel({
 
   return (
     <section className="border border-line p-5">
-      <Eyebrow>Contributors</Eyebrow>
+      <Eyebrow>Bidragsytere</Eyebrow>
       <p className="mt-2 text-sm font-light text-stone">
-        Invite family or friends by email. They add their own recipes — with
-        their story and signature — to this shared book.
+        Inviter familie eller venner på e-post. De legger til sine egne oppskrifter — med
+        historie og signatur — i denne delte boken.
       </p>
 
       {contributors.length > 0 && (
@@ -335,7 +335,7 @@ function ContributorsPanel({
               <span className="font-light text-ink">
                 {c.display_name ?? c.invited_email}
                 <span className="ml-2 text-[11px] uppercase tracking-[0.22em] text-stone">
-                  {c.accepted_at ? "joined" : "invited"}
+                  {c.accepted_at ? "med" : "invitert"}
                 </span>
               </span>
               {c.invited_email && (
@@ -345,7 +345,7 @@ function ContributorsPanel({
                     startTransition(() => void removeContributor(bookId, c.invited_email!))
                   }
                   className="px-1 text-stone hover:text-negative"
-                  aria-label="Remove contributor"
+                  aria-label="Fjern bidragsyter"
                 >
                   ×
                 </button>
@@ -360,10 +360,10 @@ function ContributorsPanel({
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="friend@example.com"
+          placeholder="venn@eksempel.no"
         />
         <Button variant="secondary" disabled={pending || !email.trim()} onClick={invite}>
-          Invite
+          Inviter
         </Button>
       </div>
       {error && <p className="mt-2 text-sm font-light text-negative">{error}</p>}
@@ -393,7 +393,7 @@ function AddRecipeControl({
         disabled={disabled || options.length === 0}
         className="h-9 flex-1 rounded-none border border-line bg-snow px-2 text-sm text-ink focus:border-gran focus:outline-none disabled:text-fog"
       >
-        <option value="">{options.length ? "Add a recipe…" : "All recipes are placed"}</option>
+        <option value="">{options.length ? "Legg til en oppskrift…" : "Alle oppskrifter er plassert"}</option>
         {options.map((r) => (
           <option key={r.id} value={r.id}>
             {r.title}
@@ -411,7 +411,7 @@ function AddRecipeControl({
         }}
         className="text-sm font-light text-gran hover:text-ink disabled:text-fog"
       >
-        Add
+        Legg til
       </button>
     </div>
   );

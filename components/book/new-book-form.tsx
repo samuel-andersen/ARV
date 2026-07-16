@@ -9,9 +9,9 @@ import { bookStyleEnum, type BookStyle } from "@/lib/schemas/common";
 import { cn } from "@/lib/utils";
 
 const STYLE_NOTES: Record<BookStyle, string> = {
-  editorial: "The Arv aesthetic — serif, generous, quiet.",
-  rustic: "Warmer. (Arrives later.)",
-  minimal: "Strict Scandinavian. (Arrives later.)",
+  editorial: "Arv-uttrykket — serif, luftig, rolig.",
+  rustic: "Varmere. (Kommer senere.)",
+  minimal: "Stram skandinavisk. (Kommer senere.)",
 };
 
 export function NewBookForm() {
@@ -24,7 +24,7 @@ export function NewBookForm() {
 
   function submit() {
     setError(null);
-    if (!title.trim()) return setError("Give the book a title.");
+    if (!title.trim()) return setError("Gi boken en tittel.");
     startTransition(async () => {
       const res = await createBook({
         title: title.trim(),
@@ -39,18 +39,18 @@ export function NewBookForm() {
 
   return (
     <div className="flex max-w-xl flex-col gap-6">
-      <Field label="Title" htmlFor="title">
-        <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Our Kitchen" />
+      <Field label="Tittel" htmlFor="title">
+        <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Vårt familiebord" />
       </Field>
-      <Field label="Subtitle" htmlFor="subtitle">
-        <Input id="subtitle" value={subtitle} onChange={(e) => setSubtitle(e.target.value)} placeholder="A first gathering" />
+      <Field label="Undertittel" htmlFor="subtitle">
+        <Input id="subtitle" value={subtitle} onChange={(e) => setSubtitle(e.target.value)} placeholder="Oppskrifter samlet 2024–2026" />
       </Field>
-      <Field label="Dedication" htmlFor="ded">
-        <Textarea id="ded" rows={2} value={dedication} onChange={(e) => setDedication(e.target.value)} placeholder="For everyone who ever cooked at this table." />
+      <Field label="Dedikasjon" htmlFor="ded">
+        <Textarea id="ded" rows={2} value={dedication} onChange={(e) => setDedication(e.target.value)} placeholder="Til alle som noen gang lagde mat ved dette bordet." />
       </Field>
 
       <div>
-        <span className="text-[11px] font-medium uppercase tracking-[0.22em] text-stone">Style</span>
+        <span className="text-[11px] font-medium uppercase tracking-[0.22em] text-stone">Stil</span>
         <div className="mt-3 grid grid-cols-3 gap-px bg-line">
           {bookStyleEnum.options.map((s) => {
             const disabled = s !== "editorial";
@@ -80,7 +80,7 @@ export function NewBookForm() {
 
       <div>
         <Button onClick={submit} disabled={pending}>
-          {pending ? "Creating…" : "Create book"}
+          {pending ? "Oppretter…" : "Opprett bok"}
         </Button>
       </div>
     </div>
