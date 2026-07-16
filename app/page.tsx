@@ -184,13 +184,28 @@ export default function Home() {
               krediterer skaperen sin — med en liten QR-kode tilbake til originalvideoen.
             </p>
           </div>
-          <div
-            data-reveal
-            className="book-spread mx-auto grid aspect-[8/5] max-w-[960px] grid-cols-2"
-            style={{ transitionDelay: ".12s", boxShadow: "0 44px 80px -32px rgba(20,20,19,.3)" }}
-          >
-            <BookLeftPage />
-            <BookRightPage />
+          <div data-reveal style={{ transitionDelay: ".12s" }}>
+            {/* Mobile: swipe one full-size 4:5 page at a time (correct format). */}
+            <div className="-mx-5 flex snap-x snap-mandatory gap-4 overflow-x-auto px-5 pb-2 sm:hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              <div className="aspect-[4/5] w-[86%] shrink-0 snap-center book-lift">
+                <BookLeftPage />
+              </div>
+              <div className="aspect-[4/5] w-[86%] shrink-0 snap-center book-lift">
+                <BookRightPage />
+              </div>
+            </div>
+            <div className="mt-3 flex items-center justify-center gap-1.5 text-[12px] font-light text-stone sm:hidden">
+              Sveip for å bla i boken
+              <span aria-hidden>→</span>
+            </div>
+            {/* Desktop: the full 8:5 spread. */}
+            <div
+              className="book-spread mx-auto hidden aspect-[8/5] max-w-[960px] grid-cols-2 sm:grid"
+              style={{ boxShadow: "0 44px 80px -32px rgba(20,20,19,.3)" }}
+            >
+              <BookLeftPage />
+              <BookRightPage />
+            </div>
           </div>
           <div
             data-reveal
@@ -492,7 +507,7 @@ function FlipCard() {
 /* ---------- Book spread pages ---------- */
 function BookLeftPage() {
   return (
-    <div className="serif flex flex-col border border-r-0 border-line bg-snow px-[8%] pb-[5%] pt-[7.5%]">
+    <div className="serif flex h-full flex-col border border-line bg-snow px-[8%] pb-[5%] pt-[7.5%] sm:border-r-0">
       <div className={`${label} mb-[18px] text-center !text-[9.5px] text-stone`}>Brød &amp; boller</div>
       <div className="relative flex-1 overflow-hidden bg-salvie">
         <SafeImage src="https://images.unsplash.com/photo-1509365465985-25d11c17e812?w=900&q=70" alt="Kardemommeboller" labelClassName="serif text-2xl font-light text-gran/50" />
@@ -510,7 +525,7 @@ function BookLeftPage() {
 
 function BookRightPage() {
   return (
-    <div className="serif flex flex-col border border-line bg-snow px-[8%] pb-[5%] pt-[7.5%]">
+    <div className="serif flex h-full flex-col border border-line bg-snow px-[8%] pb-[5%] pt-[7.5%]">
       <div className="flex min-h-0 flex-1 gap-[7%]">
         <div className="flex w-2/5 flex-none flex-col">
           <div className={`${label} mb-1.5 !text-[8.5px] !tracking-[0.2em] text-stone`}>Ingredienser</div>
