@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { LandingEffects } from "@/components/landing/landing-effects";
+import { SafeImage } from "@/components/landing/safe-image";
 
 /* eslint-disable @next/next/no-img-element */
 
@@ -229,12 +230,8 @@ export default function Home() {
               { src: "photo-1529042410759-befb1204b468", mt: "" },
               { src: "photo-1467003909585-2f8a72700288", mt: "mt-12" },
             ].map((im) => (
-              <div key={im.src} className={`relative aspect-[4/5] overflow-hidden ${im.mt}`}>
-                <img
-                  src={`https://images.unsplash.com/${im.src}?w=500&q=60`}
-                  alt=""
-                  className="absolute inset-0 h-full w-full object-cover"
-                />
+              <div key={im.src} className={`relative aspect-[4/5] overflow-hidden bg-salvie ${im.mt}`}>
+                <SafeImage src={`https://images.unsplash.com/${im.src}?w=500&q=60`} alt="" />
               </div>
             ))}
           </div>
@@ -269,12 +266,8 @@ export default function Home() {
             Til bryllupet, til jubileet, til mora som har alt. Familien samler oppskriftene sammen i
             appen — én bestiller boken.
           </p>
-          <div className="relative aspect-[21/9] w-full overflow-hidden">
-            <img
-              src="https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=1400&q=65"
-              alt="Boken som gave"
-              className="absolute inset-0 h-full w-full object-cover"
-            />
+          <div className="relative aspect-[21/9] w-full overflow-hidden bg-salvie">
+            <SafeImage src="https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=1400&q=65" alt="Boken som gave" label="Vårt familiebord" labelClassName="serif text-3xl font-light text-gran/50" />
           </div>
         </div>
       </section>
@@ -362,12 +355,8 @@ function PhoneMock() {
         </div>
         <div className="flex min-h-0 flex-1 flex-col gap-2.5 overflow-hidden px-[18px]">
           <div className="flex flex-col border border-line bg-snow">
-            <div className="relative aspect-[16/10] overflow-hidden">
-              <img
-                src="https://images.unsplash.com/photo-1509365465985-25d11c17e812?w=700&q=65"
-                alt="Kardemommeboller"
-                className="absolute inset-0 h-full w-full object-cover"
-              />
+            <div className="relative aspect-[16/10] overflow-hidden bg-salvie">
+              <SafeImage src="https://images.unsplash.com/photo-1509365465985-25d11c17e812?w=700&q=65" alt="Kardemommeboller" labelClassName="serif text-sm font-light text-gran/50" />
               <span className={`${label} absolute left-2 top-2 bg-snow px-2 py-1 !text-[7px] !tracking-[0.16em] text-gran`}>
                 Kaker
               </span>
@@ -430,12 +419,8 @@ function FlipCard() {
           className="absolute inset-0 flex flex-col overflow-hidden border border-line bg-snow [backface-visibility:hidden]"
           style={{ boxShadow: "0 28px 56px -28px rgba(20,20,19,.28)" }}
         >
-          <div className="relative flex-1 overflow-hidden">
-            <img
-              src="https://images.unsplash.com/photo-1547592166-23ac45744acd?w=700&q=65"
-              alt="Fiskesuppe"
-              className="absolute inset-0 h-full w-full object-cover"
-            />
+          <div className="relative flex-1 overflow-hidden bg-salvie">
+            <SafeImage src="https://images.unsplash.com/photo-1547592166-23ac45744acd?w=700&q=65" alt="Fiskesuppe fra Bergen" label="Fiskesuppe" labelClassName="serif text-lg font-light text-gran/50" />
             <span className={`${label} absolute left-3 top-3 bg-snow px-2.5 py-1.5 !text-[9px] !tracking-[0.18em] text-gran`}>
               Fisk
             </span>
@@ -457,27 +442,46 @@ function FlipCard() {
           className="serif absolute inset-0 flex flex-col overflow-hidden border border-line bg-papir p-[22px] [backface-visibility:hidden] [transform:rotateY(180deg)]"
           style={{ boxShadow: "inset 6px 0 14px -10px rgba(20,20,19,.18)" }}
         >
-          <div className="text-[19px]">Fiskesuppe fra Bergen</div>
-          <div className={`${label} mb-1.5 mt-3.5 !text-[8.5px] !tracking-[0.16em] text-stone`}>
+          <div className="text-[18px] leading-tight">Fiskesuppe fra Bergen</div>
+          <div className="mt-0.5 text-[9px] font-light not-italic [font-family:var(--font-sans)] text-stone">
+            4 porsjoner · 45 min
+          </div>
+          <div className={`${label} mb-1 mt-2.5 !text-[8px] !tracking-[0.16em] text-stone`}>
             Ingredienser
           </div>
           {[
-            ["Torsk", "400 g"],
+            ["Torskefilet", "400 g"],
+            ["Laks", "200 g"],
             ["Fløte", "3 dl"],
             ["Purre", "1 stk"],
+            ["Gulrot", "2 stk"],
+            ["Fiskekraft", "1 l"],
           ].map(([n, a]) => (
-            <div key={n} className="flex justify-between border-b border-line py-[5px] text-[12px]">
+            <div key={n} className="flex justify-between border-b border-line py-[2.5px] text-[10.5px]">
               <span>{n}</span>
               <span className="text-stone">{a}</span>
             </div>
           ))}
-          <div className={`${label} mb-1.5 mt-3.5 !text-[8.5px] !tracking-[0.16em] text-stone`}>
+          <div className={`${label} mb-1 mt-2.5 !text-[8px] !tracking-[0.16em] text-stone`}>
             Fremgangsmåte
           </div>
-          <div className="text-[12px] leading-[1.6]">1. Kok kraften på skinn og bein, sil den blank.</div>
-          <div className="mt-auto flex justify-between border-t border-line pt-2.5">
+          <div className="flex flex-col gap-1 text-[10.5px] leading-[1.4]">
+            <div className="flex gap-1.5">
+              <span className="italic text-gran">1</span>
+              <span>Fres purre og gulrot blankt i smør.</span>
+            </div>
+            <div className="flex gap-1.5">
+              <span className="italic text-gran">2</span>
+              <span>Hell på kraften, la småkoke ti minutter.</span>
+            </div>
+            <div className="flex gap-1.5">
+              <span className="italic text-gran">3</span>
+              <span>Ha i fløte og fisk i terninger; trekk til fisken er gjennom.</span>
+            </div>
+          </div>
+          <div className="mt-auto flex justify-between border-t border-line pt-2">
             <span className={`${label} !text-[7.5px] !tracking-[0.12em] text-stone`}>Din oppskrift</span>
-            <span className="text-[12px] font-medium text-gran">Åpne oppskriften →</span>
+            <span className="text-[11px] font-medium not-italic [font-family:var(--font-sans)] text-gran">Åpne oppskriften →</span>
           </div>
         </div>
       </div>
@@ -490,12 +494,8 @@ function BookLeftPage() {
   return (
     <div className="serif flex flex-col border border-r-0 border-line bg-snow px-[8%] pb-[5%] pt-[7.5%]">
       <div className={`${label} mb-[18px] text-center !text-[9.5px] text-stone`}>Brød &amp; boller</div>
-      <div className="relative flex-1 overflow-hidden">
-        <img
-          src="https://images.unsplash.com/photo-1509365465985-25d11c17e812?w=900&q=70"
-          alt="Kardemommeboller"
-          className="absolute inset-0 h-full w-full object-cover"
-        />
+      <div className="relative flex-1 overflow-hidden bg-salvie">
+        <SafeImage src="https://images.unsplash.com/photo-1509365465985-25d11c17e812?w=900&q=70" alt="Kardemommeboller" labelClassName="serif text-2xl font-light text-gran/50" />
       </div>
       <div className="mt-5 text-center">
         <div className="font-medium [font-size:clamp(17px,2vw,25px)]">Kardemommeboller</div>
@@ -513,34 +513,44 @@ function BookRightPage() {
     <div className="serif flex flex-col border border-line bg-snow px-[8%] pb-[5%] pt-[7.5%]">
       <div className="flex min-h-0 flex-1 gap-[7%]">
         <div className="flex w-2/5 flex-none flex-col">
-          <div className={`${label} mb-2 !text-[8.5px] !tracking-[0.2em] text-stone`}>Ingredienser</div>
-          {["500 ml helmelk", "50 g fersk gjær", "3 ss malt kardemomme"].map((i) => (
-            <div key={i} className="border-b border-line py-1 text-[10.5px]">
+          <div className={`${label} mb-1.5 !text-[8.5px] !tracking-[0.2em] text-stone`}>Ingredienser</div>
+          {[
+            "500 ml helmelk",
+            "50 g fersk gjær",
+            "150 g smør",
+            "1 dl sukker",
+            "1 ss malt kardemomme",
+            "1 egg",
+            "ca. 850 g hvetemel",
+            "½ ts salt",
+          ].map((i) => (
+            <div key={i} className="border-b border-line py-[2px] text-[9.5px]">
               {i}
             </div>
           ))}
-          <div className="py-1 text-[10.5px]">150 g mykt smør</div>
-          <div className="mt-auto border-t border-line pt-2.5">
-            <div className="serif-italic text-[10px] font-light leading-[1.6] text-gran">
+          <div className="mt-auto border-t border-line pt-2">
+            <div className="serif-italic text-[9.5px] font-light leading-[1.55] text-gran">
               Hev heller en time — de blir luftigere.
             </div>
-            <div className={`${label} mt-1 !text-[7.5px] !tracking-[0.1em] text-stone`}>— Sofie, juni 2026</div>
-            <div className="mt-[18px] h-px bg-line" />
-            <div className="mt-[17px] h-px bg-line" />
+            <div className={`${label} mt-1 !text-[7px] !tracking-[0.1em] text-stone`}>— Sofie, juni 2026</div>
+            <div className="mt-3 h-px bg-line" />
+            <div className="mt-3 h-px bg-line" />
           </div>
         </div>
         <div className="flex min-w-0 flex-1 flex-col">
-          <div className={`${label} mb-2 !text-[8.5px] !tracking-[0.2em] text-stone`}>Fremgangsmåte</div>
-          <div className="flex flex-col gap-[7px]">
+          <div className={`${label} mb-1.5 !text-[8.5px] !tracking-[0.2em] text-stone`}>Fremgangsmåte</div>
+          <div className="flex flex-col gap-[5px]">
             {[
               "Varm melken til kroppstemperatur og løs opp gjæren.",
-              "Elt til deigen slipper bollen, om lag ti minutter.",
-              "Hvil under klede til dobbel størrelse.",
-              "Rull ut, fyll og snurr. Stek ved 220° til gyllne.",
+              "Smelt smøret, rør inn sukker, kardemomme og egg.",
+              "Elt inn mel og salt til en blank, smidig deig.",
+              "La heve under klede til dobbel størrelse, ca. 45 min.",
+              "Trill boller og etterhev 30 minutter.",
+              "Pensle med egg, stek ved 220° i 10–12 min.",
             ].map((s, i) => (
               <div key={i} className="flex gap-2">
-                <span className="text-[10.5px] font-medium text-gran">{i + 1}</span>
-                <span className="text-[10.5px] leading-[1.55]">{s}</span>
+                <span className="text-[10px] font-medium text-gran">{i + 1}</span>
+                <span className="text-[10px] leading-[1.5]">{s}</span>
               </div>
             ))}
           </div>
