@@ -6,9 +6,9 @@ import { Eyebrow } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 
 const CHOICES = [
-  { value: "myself", label: "Myself", hint: "The recipes I actually cook." },
-  { value: "family", label: "My family", hint: "The dishes we pass down." },
-  { value: "gift", label: "A gift", hint: "A book for someone I love." },
+  { value: "family", label: "Familien", hint: "Rettene vi gir videre." },
+  { value: "myself", label: "Meg selv", hint: "Oppskriftene jeg faktisk lager." },
+  { value: "gift", label: "En gave", hint: "En bok til noen jeg er glad i." },
 ] as const;
 
 export default function OnboardingPage() {
@@ -32,12 +32,12 @@ export default function OnboardingPage() {
       }}
     >
       <div className="rise-in" style={{ animationDelay: "40ms" }}>
-        <Eyebrow>One question</Eyebrow>
-        <h1 className="mt-6 text-4xl font-light leading-tight text-ink">
-          Who are you collecting recipes for?
+        <Eyebrow>Ett spørsmål</Eyebrow>
+        <h1 className="serif mt-6 text-[34px] font-normal leading-tight text-ink">
+          Hvem samler du oppskrifter for?
         </h1>
         <p className="mt-4 font-light text-stone">
-          It helps us set the tone. You can change your mind anytime.
+          Det hjelper oss å sette tonen. Du kan ombestemme deg når som helst.
         </p>
       </div>
 
@@ -59,7 +59,7 @@ export default function OnboardingPage() {
               )}
             >
               <span className="flex flex-col">
-                <span className={cn("text-lg font-light", isSelected ? "text-gran" : "text-ink")}>
+                <span className={cn("serif text-[19px]", isSelected ? "text-gran" : "text-ink")}>
                   {c.label}
                 </span>
                 <span className="mt-0.5 text-sm font-light text-stone">{c.hint}</span>
@@ -81,7 +81,7 @@ export default function OnboardingPage() {
         className="rise-in mt-8 text-center text-[11px] uppercase tracking-[0.22em] text-stone"
         style={{ animationDelay: "440ms" }}
       >
-        {pending ? "Setting up your kitchen…" : "Tap to continue"}
+        {pending ? "Gjør klar kjøkkenet ditt…" : "Trykk for å fortsette"}
       </p>
     </main>
   );
