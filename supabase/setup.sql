@@ -46,6 +46,8 @@ $$;
 create table profiles (
   id uuid primary key references auth.users (id) on delete cascade,
   display_name text,
+  avatar_url text,
+  bio text,
   plan plan not null default 'free',
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -500,6 +502,7 @@ create policy orders_all on orders
 insert into storage.buckets (id, name, public)
 values
   ('recipe-images', 'recipe-images', true),
+  ('avatars', 'avatars', true),
   ('screenshots', 'screenshots', false),
   ('book-exports', 'book-exports', false)
 on conflict (id) do nothing;
@@ -507,6 +510,25 @@ on conflict (id) do nothing;
 -- recipe-images: public read; users write within their own uid/ folder.
 create policy recipe_images_read on storage.objects
   for select using (bucket_id = 'recipe-images');
+
+-- avatars: public read; users write within their own uid/ folder.
+create policy avatars_read on storage.objects
+  for select using (bucket_id = 'avatars');
+create policy avatars_write on storage.objects
+  for insert with check (
+    bucket_id = 'avatars'
+    and (storage.foldername(name))[1] = auth.uid()::text
+  );
+create policy avatars_update on storage.objects
+  for update using (
+    bucket_id = 'avatars'
+    and (storage.foldername(name))[1] = auth.uid()::text
+  );
+create policy avatars_delete on storage.objects
+  for delete using (
+    bucket_id = 'avatars'
+    and (storage.foldername(name))[1] = auth.uid()::text
+  );
 create policy recipe_images_write on storage.objects
   for insert with check (
     bucket_id = 'recipe-images'

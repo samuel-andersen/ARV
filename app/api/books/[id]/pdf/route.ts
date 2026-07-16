@@ -26,7 +26,7 @@ export async function GET(
   }
 
   registerPrintFonts();
-  const pages = buildBookPages(book, user.displayName);
+  const pages = buildBookPages(book, user.displayName, user.avatarUrl);
   // react-pdf requires the ROOT element to be a <Document>, so we call the
   // builder to get the element rather than wrapping it in a component.
   const element = BookDocument({ pages }) as Parameters<typeof renderToBuffer>[0];

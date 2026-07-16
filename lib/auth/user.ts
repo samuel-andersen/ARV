@@ -6,6 +6,8 @@ export interface CurrentUser {
   id: string;
   email: string | null;
   displayName: string | null;
+  avatarUrl: string | null;
+  bio: string | null;
   plan: Plan;
 }
 
@@ -19,7 +21,7 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("display_name, plan")
+    .select("display_name, avatar_url, bio, plan")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -27,6 +29,8 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
     id: user.id,
     email: user.email ?? null,
     displayName: profile?.display_name ?? null,
+    avatarUrl: (profile as { avatar_url?: string | null } | null)?.avatar_url ?? null,
+    bio: (profile as { bio?: string | null } | null)?.bio ?? null,
     plan: (profile?.plan as Plan) ?? "free",
   };
 }

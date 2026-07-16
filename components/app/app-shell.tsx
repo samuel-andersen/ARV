@@ -91,9 +91,11 @@ const TABS: Tab[] = [
 
 export function AppShell({
   email,
+  avatarUrl,
   children,
 }: {
   email: string | null;
+  avatarUrl?: string | null;
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
@@ -117,9 +119,14 @@ export function AppShell({
           <Link
             href="/account"
             aria-label="Profil"
-            className="tap flex h-8 w-8 items-center justify-center bg-salvie text-xs font-medium text-gran"
+            className="tap flex h-8 w-8 items-center justify-center overflow-hidden bg-salvie text-xs font-medium text-gran"
           >
-            {initial}
+            {avatarUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={avatarUrl} alt="" className="h-full w-full object-cover" decoding="async" />
+            ) : (
+              initial
+            )}
           </Link>
         </div>
       </header>

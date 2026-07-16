@@ -94,9 +94,23 @@ export function PageInner({ page }: { page: PageModel }) {
           {page.subtitle && (
             <p style={book} className="mt-2 text-[clamp(8px,2cqw,14px)] text-gran">{page.subtitle}</p>
           )}
-          <p className="mt-auto text-[clamp(6px,1.4cqw,10px)] font-light text-stone">
-            {page.author ?? ""}
-          </p>
+          <div className="mt-auto flex flex-col items-center gap-[3%]">
+            {page.authorAvatar && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={page.authorAvatar}
+                alt=""
+                className="h-[16%] max-h-16 w-auto max-w-[24%] object-cover"
+                style={{ aspectRatio: "1 / 1" }}
+                decoding="async"
+              />
+            )}
+            {page.author && (
+              <p className="text-[clamp(6px,1.4cqw,10px)] font-light text-stone">
+                Samlet av {page.author}
+              </p>
+            )}
+          </div>
         </div>
       );
     case "dedication":

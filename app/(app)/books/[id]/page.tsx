@@ -25,7 +25,7 @@ export default async function BookBuilderPage({
   const isOwner = !!user && user.id === book.owner_id;
   const contributors: Contributor[] = isOwner ? await getBookContributors(id) : [];
 
-  const pages = buildBookPages(book, user?.displayName ?? null);
+  const pages = buildBookPages(book, user?.displayName ?? null, user?.avatarUrl ?? null);
   const pageCount = estimatePageCount(pages);
 
   return (

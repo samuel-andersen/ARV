@@ -11,7 +11,7 @@ import { deriveSignals, resolveTemplate } from "./template-selection";
  */
 
 export type PageModel =
-  | { kind: "cover"; title: string; subtitle: string | null; author: string | null; coverImage: string | null }
+  | { kind: "cover"; title: string; subtitle: string | null; author: string | null; authorAvatar: string | null; coverImage: string | null }
   | { kind: "dedication"; text: string }
   | { kind: "toc"; entries: { chapter: string; recipes: string[] }[] }
   | { kind: "chapter_opener"; index: number; title: string; introText: string | null }
@@ -32,7 +32,11 @@ export function templateForPlacement(
   return resolveTemplate(deriveSignals(recipe), override);
 }
 
-export function buildBookPages(book: BookWithContent, authorName: string | null): PageModel[] {
+export function buildBookPages(
+  book: BookWithContent,
+  authorName: string | null,
+  authorAvatar: string | null = null,
+): PageModel[] {
   const pages: PageModel[] = [];
 
   pages.push({
@@ -40,6 +44,7 @@ export function buildBookPages(book: BookWithContent, authorName: string | null)
     title: book.title,
     subtitle: book.subtitle,
     author: authorName,
+    authorAvatar,
     coverImage: book.cover_image,
   });
 

@@ -43,6 +43,8 @@ const s = StyleSheet.create({
   },
   coverTitle: { fontFamily: "Fraunces", fontWeight: 300, fontSize: 40, lineHeight: 1.05 },
   coverSub: { fontFamily: "Fraunces", fontWeight: 400, fontSize: 15, color: color.gran, marginTop: 10 },
+  coverAuthorBlock: { flexDirection: "column", alignItems: "center" },
+  coverAvatar: { width: 54, height: 54, objectFit: "cover", marginBottom: 8 },
   coverAuthor: { fontFamily: "Inter", fontWeight: 400, fontSize: 10, color: color.stone },
   // Dedication
   center: { flexDirection: "column", justifyContent: "center", alignItems: "center", height: "100%" },
@@ -153,7 +155,15 @@ function standardPage(page: PageModel, key: number) {
               <Text style={s.coverTitle}>{page.title}</Text>
               {page.subtitle ? <Text style={s.coverSub}>{page.subtitle}</Text> : null}
             </View>
-            <Text style={s.coverAuthor}>{page.author ?? ""}</Text>
+            <View style={s.coverAuthorBlock}>
+              {page.authorAvatar ? (
+                // eslint-disable-next-line jsx-a11y/alt-text -- react-pdf Image has no alt
+                <Image src={page.authorAvatar} style={s.coverAvatar} />
+              ) : null}
+              {page.author ? (
+                <Text style={s.coverAuthor}>Samlet av {page.author}</Text>
+              ) : null}
+            </View>
           </View>
         </Page>
       );

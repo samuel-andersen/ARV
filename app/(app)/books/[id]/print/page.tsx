@@ -16,7 +16,7 @@ export default async function BookPrintPage({
   const [book, user] = await Promise.all([getBookWithContent(id), getCurrentUser()]);
   if (!book) notFound();
 
-  const pages = buildBookPages(book, user?.displayName ?? null);
+  const pages = buildBookPages(book, user?.displayName ?? null, user?.avatarUrl ?? null);
   const pageCount = estimatePageCount(pages);
   const ordered = book.status === "ordered";
   const coverImage =

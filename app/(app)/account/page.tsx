@@ -4,6 +4,7 @@ import { listRecipes } from "@/lib/data/recipes";
 import { listBooks } from "@/lib/data/books";
 import { getPendingInvites } from "@/lib/data/books";
 import { signOut } from "@/lib/actions/auth";
+import { ProfileIdentity } from "@/components/account/profile-identity";
 
 const LABEL = "text-[9.5px] font-medium uppercase tracking-[0.22em] text-stone";
 
@@ -21,18 +22,17 @@ export default async function AccountPage() {
 
   return (
     <div className="max-w-xl">
-      {/* Identity */}
-      <div className="flex items-center gap-4 pt-2">
-        <span className="serif flex h-14 w-14 shrink-0 items-center justify-center bg-salvie text-[23px] text-gran">
-          {initial}
-        </span>
-        <div>
-          <h1 className="serif text-[22px] font-normal text-ink">{name}</h1>
-          <p className="mt-1 text-xs font-light text-stone">
-            Samler til familien · {user?.plan === "pro" ? "Arv Pro" : "medlem"}
-          </p>
-        </div>
-      </div>
+      {/* Identity — editable name, bio and profile photo. */}
+      {user && (
+        <ProfileIdentity
+          userId={user.id}
+          name={name}
+          initial={initial}
+          avatarUrl={user.avatarUrl}
+          bio={user.bio}
+          planLabel={user.plan === "pro" ? "Arv Pro" : "medlem"}
+        />
+      )}
 
       {/* Key stats — shared-border grid */}
       <div className="mt-6 grid grid-cols-3 gap-px border-y border-line bg-line">

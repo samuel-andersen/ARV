@@ -7,5 +7,9 @@ export default async function AppLayout({
   children: React.ReactNode;
 }) {
   const user = await requireUser();
-  return <AppShell email={user.email}>{children}</AppShell>;
+  return (
+    <AppShell email={user.email} avatarUrl={user.avatarUrl}>
+      {children}
+    </AppShell>
+  );
 }
