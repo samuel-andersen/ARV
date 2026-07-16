@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getRecipe } from "@/lib/data/recipes";
-import { deleteRecipe } from "@/lib/actions/recipes";
 import { RecipeBody } from "@/components/recipe/recipe-body";
 import { ShareToggle } from "@/components/recipe/share-toggle";
 import { CookModeLauncher } from "@/components/recipe/cook-mode";
+import { BackButton } from "@/components/app/back-button";
+import { DeleteRecipeButton } from "@/components/recipe/delete-recipe-button";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
@@ -28,7 +29,6 @@ export default async function RecipePage({
   const recipe = await getRecipe(id);
   if (!recipe) notFound();
 
-  const del = deleteRecipe.bind(null, id);
   const time = totalTime(recipe.prep_min, recipe.cook_min);
   const credit = recipe.is_original
     ? "Din oppskrift"
@@ -53,13 +53,7 @@ export default async function RecipePage({
             <span className="serif text-5xl font-light text-gran/50">Arv</span>
           </div>
         )}
-        <Link
-          href="/library"
-          aria-label="Tilbake"
-          className="tap absolute left-3.5 top-3.5 flex h-9 w-9 items-center justify-center bg-snow text-lg font-light text-ink"
-        >
-          ←
-        </Link>
+        <BackButton />
       </div>
 
       <div className="flex flex-col gap-5 px-5 py-6 sm:px-8">
@@ -148,14 +142,9 @@ export default async function RecipePage({
           </Link>
         </div>
 
-        <form action={del} className="pt-2">
-          <button
-            type="submit"
-            className="text-[11px] font-medium uppercase tracking-[0.22em] text-stone hover:text-negative"
-          >
-            Slett oppskrift
-          </button>
-        </form>
+        <div className="pt-2">
+          <DeleteRecipeButton id={recipe.id} />
+        </div>
       </div>
     </article>
   );

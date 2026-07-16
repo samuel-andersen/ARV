@@ -75,6 +75,25 @@ body {
   overscroll-behavior-y: none;
 }
 
+/* Images behave like native assets: no long-press "save image" callout,
+   no drag ghost. */
+img {
+  -webkit-touch-callout: none;
+  -webkit-user-drag: none;
+  user-select: none;
+}
+
+/* Interactive chrome shouldn't be selectable or show the callout — but let
+   real content (recipe bodies, stories, book pages) stay selectable. */
+button,
+a,
+.label,
+[role="button"] {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
 /* The serif voice — recipe titles, step numerals, stories, notes, book pages. */
 .serif {
   font-family: var(--font-serif);
