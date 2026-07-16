@@ -48,11 +48,11 @@ export function ShareToggle({
     <div className="border border-line p-5">
       <div className="flex items-center justify-between">
         <div>
-          <Eyebrow>Share</Eyebrow>
+          <Eyebrow>Del oppskrift</Eyebrow>
           <p className="mt-2 text-sm font-light text-stone">
             {isPublic
-              ? "Anyone with the link can view this recipe."
-              : "Turn on a public link to share this recipe."}
+              ? "Alle med lenken kan se denne oppskriften."
+              : "Slå på en offentlig lenke for å dele oppskriften."}
           </p>
         </div>
         <button
@@ -86,7 +86,7 @@ export function ShareToggle({
             onClick={copy}
             className="h-10 shrink-0 border border-line px-4 text-sm font-medium text-gran hover:border-gran"
           >
-            {copied ? "Copied" : "Copy"}
+            {copied ? "Kopiert" : "Kopier"}
           </button>
         </div>
       )}

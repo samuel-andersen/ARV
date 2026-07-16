@@ -113,9 +113,9 @@ export function RecipeForm({
         .filter(Boolean),
     };
 
-    if (!input.title) return setError("Give the recipe a title.");
-    if (!input.ingredients.length) return setError("Add at least one ingredient.");
-    if (!input.steps.length) return setError("Add at least one step.");
+    if (!input.title) return setError("Gi oppskriften en tittel.");
+    if (!input.ingredients.length) return setError("Legg til minst én ingrediens.");
+    if (!input.steps.length) return setError("Legg til minst ett steg.");
 
     startTransition(async () => {
       const result = onSave
@@ -130,23 +130,23 @@ export function RecipeForm({
   return (
     <div className="flex flex-col gap-10">
       <div className="flex flex-col gap-6">
-        <Field label="Title" htmlFor="title">
-          <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Grandmother's Cardamom Buns" />
+        <Field label="Tittel" htmlFor="title">
+          <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Mormors kardemommeboller" />
         </Field>
-        <Field label="Description" htmlFor="desc" hint="One line about the dish.">
+        <Field label="Beskrivelse" htmlFor="desc" hint="Én linje om retten.">
           <Input id="desc" value={description} onChange={(e) => setDescription(e.target.value)} />
         </Field>
-        <Field label="Story" htmlFor="story" hint="Why this recipe matters — the book is meant to be written in.">
+        <Field label="Historie" htmlFor="story" hint="Hvorfor denne oppskriften betyr noe — boken er ment å skrives i.">
           <Textarea id="story" rows={3} value={story} onChange={(e) => setStory(e.target.value)} />
         </Field>
         <div className="grid grid-cols-3 gap-4">
-          <Field label="Serves" htmlFor="servings">
+          <Field label="Porsjoner" htmlFor="servings">
             <Input id="servings" inputMode="numeric" value={servings} onChange={(e) => setServings(e.target.value)} />
           </Field>
-          <Field label="Prep (min)" htmlFor="prep">
+          <Field label="Forb. (min)" htmlFor="prep">
             <Input id="prep" inputMode="numeric" value={prep} onChange={(e) => setPrep(e.target.value)} />
           </Field>
-          <Field label="Cook (min)" htmlFor="cook">
+          <Field label="Steking (min)" htmlFor="cook">
             <Input id="cook" inputMode="numeric" value={cook} onChange={(e) => setCook(e.target.value)} />
           </Field>
         </div>
@@ -154,22 +154,22 @@ export function RecipeForm({
 
       {/* Ingredients */}
       <section>
-        <Eyebrow>Ingredients</Eyebrow>
+        <Eyebrow>Ingredienser</Eyebrow>
         <div className="mt-4 flex flex-col gap-2">
           {ingredients.map((r, i) => (
             <div
               key={i}
               className="flex flex-wrap items-center gap-2 border-b border-line py-2 sm:border-0 sm:py-0"
             >
-              <Input className="w-16" inputMode="decimal" placeholder="Qty" value={r.quantity} onChange={(e) => setIng(i, { quantity: e.target.value })} />
-              <Input className="w-[72px]" placeholder="Unit" value={r.unit} onChange={(e) => setIng(i, { unit: e.target.value })} />
-              <Input className="min-w-[45%] flex-1" placeholder="Ingredient" value={r.name} onChange={(e) => setIng(i, { name: e.target.value })} />
-              <Input className="min-w-[45%] flex-1" placeholder="Note (optional)" value={r.note} onChange={(e) => setIng(i, { note: e.target.value })} />
+              <Input className="w-16" inputMode="decimal" placeholder="Mengde" value={r.quantity} onChange={(e) => setIng(i, { quantity: e.target.value })} />
+              <Input className="w-[72px]" placeholder="Enhet" value={r.unit} onChange={(e) => setIng(i, { unit: e.target.value })} />
+              <Input className="min-w-[45%] flex-1" placeholder="Ingrediens" value={r.name} onChange={(e) => setIng(i, { name: e.target.value })} />
+              <Input className="min-w-[45%] flex-1" placeholder="Notat (valgfritt)" value={r.note} onChange={(e) => setIng(i, { note: e.target.value })} />
               <button
                 type="button"
                 onClick={() => setIngredients((p) => p.filter((_, idx) => idx !== i))}
                 className="tap ml-auto px-2 text-lg text-stone hover:text-negative"
-                aria-label="Remove ingredient"
+                aria-label="Fjern ingrediens"
               >
                 ×
               </button>
@@ -181,19 +181,19 @@ export function RecipeForm({
           onClick={() => setIngredients((p) => [...p, { quantity: "", unit: "", name: "", note: "" }])}
           className="tap mt-3 inline-flex min-h-11 items-center text-sm font-light text-gran hover:text-ink"
         >
-          + Add ingredient
+          + Legg til ingrediens
         </button>
       </section>
 
       {/* Steps */}
       <section>
-        <Eyebrow>Method</Eyebrow>
+        <Eyebrow>Fremgangsmåte</Eyebrow>
         <div className="mt-4 flex flex-col gap-3">
           {steps.map((r, i) => (
             <div key={i} className="flex items-start gap-3">
               <span className="mt-3 w-6 shrink-0 text-sm font-light text-stone">{i + 1}.</span>
               <div className="flex-1">
-                <Textarea rows={2} placeholder="Describe the step" value={r.text} onChange={(e) => setStep(i, { text: e.target.value })} />
+                <Textarea rows={2} placeholder="Beskriv steget" value={r.text} onChange={(e) => setStep(i, { text: e.target.value })} />
               </div>
               <div className="w-20 shrink-0">
                 <Input placeholder="Timer" inputMode="numeric" value={r.timer_min} onChange={(e) => setStep(i, { timer_min: e.target.value })} />
@@ -202,7 +202,7 @@ export function RecipeForm({
                 type="button"
                 onClick={() => setSteps((p) => p.filter((_, idx) => idx !== i))}
                 className="tap mt-3 px-2 text-lg text-stone hover:text-negative"
-                aria-label="Remove step"
+                aria-label="Fjern steg"
               >
                 ×
               </button>
@@ -214,19 +214,19 @@ export function RecipeForm({
           onClick={() => setSteps((p) => [...p, { text: "", timer_min: "" }])}
           className="tap mt-3 inline-flex min-h-11 items-center text-sm font-light text-gran hover:text-ink"
         >
-          + Add step
+          + Legg til steg
         </button>
       </section>
 
-      <Field label="Tags" htmlFor="tags" hint="Comma separated.">
-        <Input id="tags" value={tags} onChange={(e) => setTags(e.target.value)} placeholder="baking, family" />
+      <Field label="Emneknagger" htmlFor="tags" hint="Skill med komma.">
+        <Input id="tags" value={tags} onChange={(e) => setTags(e.target.value)} placeholder="baking, familie" />
       </Field>
 
       {error && <p className="text-sm font-light text-negative">{error}</p>}
 
       <div className="flex items-center gap-4">
         <Button onClick={submit} disabled={pending}>
-          {pending ? "Saving…" : submitLabel ?? (data.id ? "Save changes" : "Save recipe")}
+          {pending ? "Lagrer…" : (submitLabel ?? (data.id ? "Lagre endringer" : "Lagre oppskrift"))}
         </Button>
       </div>
     </div>

@@ -39,8 +39,8 @@ export default async function EditRecipePage({
 
   return (
     <div className="max-w-3xl">
-      <Eyebrow>Edit recipe</Eyebrow>
-      <h1 className="mt-3 text-3xl font-light text-ink">{recipe.title}</h1>
+      <Eyebrow>Rediger oppskrift</Eyebrow>
+      <h1 className="serif mt-3 text-[27px] font-normal text-ink">{recipe.title}</h1>
       <div className="mt-10">
         <RecipeForm initial={initial} />
       </div>

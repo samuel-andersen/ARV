@@ -4,11 +4,11 @@ import { Eyebrow } from "@/components/ui/label";
 export default function NewBookPage() {
   return (
     <div>
-      <Eyebrow>New book</Eyebrow>
-      <h1 className="mt-3 text-3xl font-light text-ink">Begin a book.</h1>
+      <Eyebrow>Ny bok</Eyebrow>
+      <h1 className="serif mt-3 text-[27px] font-normal text-ink">Begynn en bok.</h1>
       <p className="mt-3 max-w-xl font-light text-stone">
-        You make the content decisions — recipes, order, dedication. Arv makes
-        it look typeset.
+        Du tar innholdsvalgene — oppskrifter, rekkefølge, dedikasjon. Arv gjør
+        at det ser trykket ut.
       </p>
       <div className="mt-10">
         <NewBookForm />
