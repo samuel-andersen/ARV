@@ -348,7 +348,16 @@ create policy profiles_update_own on profiles
 -- Uses the SECURITY DEFINER helper so the book-membership lookup doesn't
 -- re-enter book_recipes / book_chapters RLS on every row.
 create policy recipes_select on recipes
-  for select using (can_read_recipe(id));
+  for select using (
+    owner_id = auth.uid()
+    or is_public
+    or exists (
+      select 1
+      from book_recipes br
+      join book_chapters ch on ch.id = br.chapter_id
+      where br.recipe_id = recipes.id and is_book_member(ch.book_id)
+    )
+  );
 create policy recipes_insert on recipes
   for insert with check (owner_id = auth.uid());
 create policy recipes_update on recipes
@@ -392,7 +401,13 @@ create policy import_jobs_all on import_jobs
 -- books  (members read; owner mutates)
 -- ---------------------------------------------------------------------------
 create policy books_select on books
-  for select using (is_book_member(id));
+  for select using (
+    owner_id = auth.uid()
+    or exists (
+      select 1 from book_contributors c
+      where c.book_id = books.id and c.user_id = auth.uid() and c.accepted_at is not null
+    )
+  );
 create policy books_insert on books
   for insert with check (owner_id = auth.uid());
 create policy books_update on books

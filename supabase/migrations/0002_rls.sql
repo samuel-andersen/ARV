@@ -95,10 +95,22 @@ create policy profiles_update_own on profiles
 -- ---------------------------------------------------------------------------
 -- recipes  (owner full access; public read; book members read)
 -- ---------------------------------------------------------------------------
--- Uses the SECURITY DEFINER helper so the book-membership lookup doesn't
--- re-enter book_recipes / book_chapters RLS on every row.
+-- Read the row's OWN columns directly for the owner/public case so
+-- INSERT ... RETURNING can see a just-inserted row. (A SECURITY DEFINER helper
+-- that re-looks-up the row by id does not see the new row in the same
+-- statement, which broke every insert-with-returning.) The book-membership
+-- lookup still uses the helper.
 create policy recipes_select on recipes
-  for select using (can_read_recipe(id));
+  for select using (
+    owner_id = auth.uid()
+    or is_public
+    or exists (
+      select 1
+      from book_recipes br
+      join book_chapters ch on ch.id = br.chapter_id
+      where br.recipe_id = recipes.id and is_book_member(ch.book_id)
+    )
+  );
 create policy recipes_insert on recipes
   for insert with check (owner_id = auth.uid());
 create policy recipes_update on recipes
@@ -141,8 +153,16 @@ create policy import_jobs_all on import_jobs
 -- ---------------------------------------------------------------------------
 -- books  (members read; owner mutates)
 -- ---------------------------------------------------------------------------
+-- Direct column read for the owner case (see recipes_select note) so
+-- INSERT ... RETURNING sees the new book; membership still uses the join.
 create policy books_select on books
-  for select using (is_book_member(id));
+  for select using (
+    owner_id = auth.uid()
+    or exists (
+      select 1 from book_contributors c
+      where c.book_id = books.id and c.user_id = auth.uid() and c.accepted_at is not null
+    )
+  );
 create policy books_insert on books
   for insert with check (owner_id = auth.uid());
 create policy books_update on books
