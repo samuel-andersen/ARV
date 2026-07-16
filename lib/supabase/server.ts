@@ -37,19 +37,27 @@ export async function createClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
   const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
-  const base = createServerClient(url, anon, { cookies: cookieMethods });
+  const client = createServerClient(url, anon, { cookies: cookieMethods });
 
   const {
     data: { session },
-  } = await base.auth.getSession();
+  } = await client.auth.getSession();
 
-  // Not signed in — return the plain (anon) client for public reads.
-  if (!session?.access_token) return base;
+  // Signed in — explicitly propagate the token to the PostgREST/Storage layer.
+  // `setSession` calls the internal rest.setAuth(access_token), which is the
+  // authoritative way to make `.from()` carry the user's JWT (a bare global
+  // Authorization header can be overwritten by supabase-js's own auth events).
+  if (session?.access_token) {
+    try {
+      await client.auth.setSession({
+        access_token: session.access_token,
+        refresh_token: session.refresh_token,
+      });
+    } catch {
+      // Non-fatal — the client still carries cookie auth; the diagnostic in
+      // /debug will surface if the DB still can't see the session.
+    }
+  }
 
-  // Signed in — pin the user's token onto every PostgREST/Storage request so
-  // RLS resolves auth.uid() reliably.
-  return createServerClient(url, anon, {
-    cookies: cookieMethods,
-    global: { headers: { Authorization: `Bearer ${session.access_token}` } },
-  });
+  return client;
 }
