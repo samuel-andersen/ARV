@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input, Textarea } from "@/components/ui/input";
@@ -12,6 +12,41 @@ import type { SourcePlatform } from "@/lib/schemas/common";
 import { cn } from "@/lib/utils";
 
 type Mode = "url" | "text";
+
+const IMPORT_PHASES = [
+  "Ser videoen",
+  "Lytter til instruksjonene",
+  "Leser bildeteksten",
+  "Skriver ned oppskriften",
+];
+
+/** The signature import moment — status lines surface one by one while the
+ *  agent actually works. Cosmetic pacing over a real server call. */
+function ImportProgress({ source }: { source: string }) {
+  const [phase, setPhase] = useState(0);
+  useEffect(() => {
+    const timers = [700, 1600, 2600, 3600].map((t, i) =>
+      setTimeout(() => setPhase(i + 1), t),
+    );
+    return () => timers.forEach(clearTimeout);
+  }, []);
+  return (
+    <div className="mt-8">
+      <p className="truncate text-xs font-light text-stone">{source}</p>
+      <div className="mt-8 flex flex-col gap-3.5">
+        {IMPORT_PHASES.map((p, i) => (
+          <div
+            key={p}
+            className="text-[10.5px] font-medium uppercase tracking-[0.22em] text-gran transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]"
+            style={{ opacity: phase > i ? 1 : 0, transform: phase > i ? "none" : "translateY(10px)" }}
+          >
+            {p}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 function draftToInitial(draft: ImportDraft): RecipeFormInitial {
   return {
@@ -76,11 +111,11 @@ export function ImportFlow({ initialUrl }: { initialUrl?: string }) {
     };
     return (
       <div>
-        <Eyebrow>Review &amp; save</Eyebrow>
-        <h1 className="mt-3 text-3xl font-light text-ink">Check the recipe</h1>
+        <Eyebrow>Se over</Eyebrow>
+        <h1 className="serif mt-3 text-[27px] font-normal text-ink">Se over oppskriften</h1>
         <p className="mt-3 max-w-xl font-light text-stone">
-          Everything below was normalized to house style. Fix anything the agent
-          got wrong — flagged quantities are marked. Attribution is kept.
+          Alt under er skrevet om til husets stil. Rett det agenten tok feil av —
+          usikre mengder er markert. Kilden krediteres alltid.
         </p>
 
         {draft.fallbackMessage && (
@@ -90,11 +125,11 @@ export function ImportFlow({ initialUrl }: { initialUrl?: string }) {
         )}
 
         <div className="mt-4 flex flex-wrap gap-x-6 gap-y-1 text-xs font-light text-stone">
-          {!draft.servingsDetected && <span className="text-negative">Servings guessed — confirm</span>}
-          {draft.source_author && <span>via {draft.source_author}</span>}
+          {!draft.servingsDetected && <span className="text-negative">Porsjoner gjettet — bekreft</span>}
+          {draft.source_author && <span>etter {draft.source_author}</span>}
           {draft.source_url && (
             <a href={draft.source_url} target="_blank" rel="noreferrer noopener" className="text-gran hover:text-ink">
-              {draft.source_platform} source
+              {draft.source_platform}-kilde
             </a>
           )}
           <span>{draft.layersUsed.join(" · ")}</span>
@@ -102,7 +137,7 @@ export function ImportFlow({ initialUrl }: { initialUrl?: string }) {
 
         {draft.visualNotes.length > 0 && (
           <div className="mt-4 bg-salvie p-4">
-            <Eyebrow onSalvie>Noticed on screen</Eyebrow>
+            <Eyebrow onSalvie>Lagt merke til</Eyebrow>
             <ul className="mt-2 list-inside list-disc text-sm font-light text-gran">
               {draft.visualNotes.map((n, i) => (
                 <li key={i}>{n}</li>
@@ -114,7 +149,7 @@ export function ImportFlow({ initialUrl }: { initialUrl?: string }) {
         <div className="mt-10">
           <RecipeForm
             initial={draftToInitial(draft)}
-            submitLabel="Save to your Arv"
+            submitLabel="Lagre i Arv"
             onSave={(input) => confirmImport({ jobId, recipe: input, source })}
           />
         </div>
@@ -125,65 +160,71 @@ export function ImportFlow({ initialUrl }: { initialUrl?: string }) {
   // Input step.
   return (
     <div className="max-w-2xl">
-      <Eyebrow>Import</Eyebrow>
-      <h1 className="mt-3 text-3xl font-light text-ink">Bring a recipe in.</h1>
+      <Eyebrow>Importer</Eyebrow>
+      <h1 className="serif mt-3 text-[27px] font-normal text-ink">Hent inn en oppskrift.</h1>
       <p className="mt-3 font-light text-stone">
-        Paste a link (YouTube works fully; Instagram &amp; TikTok fall back to
-        the caption), or paste the recipe text. The agent watches, reads, and
-        writes it down — then normalizes it.
+        Lim inn en lenke (YouTube fungerer fullt ut; Instagram og TikTok faller
+        tilbake til bildeteksten), eller lim inn selve teksten. Agenten ser,
+        leser og skriver den ned — og retter den til husets stil.
       </p>
 
-      <div className="mt-8 flex gap-px bg-line">
-        {(["url", "text"] as const).map((m) => (
-          <button
-            key={m}
-            type="button"
-            onClick={() => setMode(m)}
-            className={cn(
-              "flex-1 bg-snow px-4 py-3 text-sm transition-colors duration-150",
-              mode === m ? "bg-salvie text-gran" : "text-stone hover:bg-mist",
+      {pending ? (
+        <ImportProgress source={mode === "url" ? url.trim() || "Henter…" : "Leser inn teksten…"} />
+      ) : (
+        <>
+          <div className="mt-8 flex gap-px bg-line">
+            {(["url", "text"] as const).map((m) => (
+              <button
+                key={m}
+                type="button"
+                onClick={() => setMode(m)}
+                className={cn(
+                  "flex-1 bg-snow px-4 py-3 text-sm transition-colors duration-150",
+                  mode === m ? "bg-salvie text-gran" : "text-stone hover:bg-mist",
+                )}
+              >
+                {m === "url" ? "Lim inn lenke" : "Lim inn tekst"}
+              </button>
+            ))}
+          </div>
+
+          <div className="mt-6">
+            {mode === "url" ? (
+              <Input
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+                placeholder="https://instagram.com/reel/… eller youtube.com/watch?v=…"
+                autoFocus
+              />
+            ) : (
+              <Textarea
+                rows={10}
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                placeholder={"Lim inn hele oppskriften — tittel, ingredienser og steg.\n\nIngredienser\n500 g mel\n…\n\nFremgangsmåte\nBland alt sammen…"}
+                autoFocus
+              />
             )}
-          >
-            {m === "url" ? "Paste a link" : "Paste text"}
-          </button>
-        ))}
-      </div>
+          </div>
 
-      <div className="mt-6">
-        {mode === "url" ? (
-          <Input
-            value={url}
-            onChange={(e) => setUrl(e.target.value)}
-            placeholder="https://youtube.com/watch?v=…"
-            autoFocus
-          />
-        ) : (
-          <Textarea
-            rows={10}
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            placeholder={"Paste the whole recipe — title, ingredients, and steps.\n\nIngredients\n500 g flour\n…\n\nMethod\nMix everything…"}
-            autoFocus
-          />
-        )}
-      </div>
-
-      {error && (
-        <div className="mt-4 text-sm font-light text-negative">
-          {error}
-          {upgrade && (
-            <Link href="/settings/plan" className="ml-2 text-gran hover:text-ink">
-              Upgrade to Pro →
-            </Link>
+          {error && (
+            <div className="mt-4 text-sm font-light text-negative">
+              {error}
+              {upgrade && (
+                <Link href="/account" className="ml-2 text-gran hover:text-ink">
+                  Oppgrader til Arv Pro →
+                </Link>
+              )}
+            </div>
           )}
-        </div>
-      )}
 
-      <div className="mt-6">
-        <Button onClick={run} disabled={pending || (mode === "url" ? !url.trim() : !text.trim())}>
-          {pending ? "Reading the recipe…" : "Import"}
-        </Button>
-      </div>
+          <div className="mt-6">
+            <Button onClick={run} disabled={mode === "url" ? !url.trim() : !text.trim()}>
+              Importer
+            </Button>
+          </div>
+        </>
+      )}
     </div>
   );
 }
