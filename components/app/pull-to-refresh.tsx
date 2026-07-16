@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { tapHaptic } from "@/lib/haptics";
 
 /**
  * Native-feeling pull-to-refresh. Engages only at the top of the page (we've
@@ -15,6 +16,7 @@ const MAX = 96;
 export function PullToRefresh({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const startY = useRef<number | null>(null);
+  const armed = useRef(false);
   const [pull, setPull] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -28,12 +30,21 @@ export function PullToRefresh({ children }: { children: React.ReactNode }) {
   function onMove(e: React.TouchEvent) {
     if (startY.current == null) return;
     const dy = (e.touches[0]?.clientY ?? 0) - startY.current;
-    setPull(dy <= 0 ? 0 : Math.min(MAX, dy * 0.5));
+    const next = dy <= 0 ? 0 : Math.min(MAX, dy * 0.5);
+    // Fire a single "catch" tap the moment we cross the release threshold.
+    if (next >= THRESHOLD && !armed.current) {
+      armed.current = true;
+      tapHaptic();
+    } else if (next < THRESHOLD) {
+      armed.current = false;
+    }
+    setPull(next);
   }
   function onEnd() {
     if (startY.current == null) return;
     const trigger = pull >= THRESHOLD;
     startY.current = null;
+    armed.current = false;
     if (trigger) {
       setRefreshing(true);
       setPull(THRESHOLD * 0.6);

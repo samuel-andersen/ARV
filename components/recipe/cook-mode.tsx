@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
+import { okHaptic, tapHaptic } from "@/lib/haptics";
 import type { Ingredient, Step } from "@/lib/schemas/recipe";
 
 /** Minimal shapes so we don't depend on the DOM lib's experimental typings. */
@@ -87,7 +88,10 @@ function CookMode({
   const atEnd = index >= steps.length;
   const step = atEnd ? null : steps[index];
 
-  const next = useCallback(() => setIndex((i) => Math.min(i + 1, steps.length)), [steps.length]);
+  const next = useCallback(() => {
+    tapHaptic();
+    setIndex((i) => Math.min(i + 1, steps.length));
+  }, [steps.length]);
   const prev = useCallback(() => setIndex((i) => Math.max(i - 1, 0)), []);
 
   /* ---- Wake lock: keep the screen on while cooking. ---- */
@@ -177,7 +181,7 @@ function CookMode({
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex flex-col bg-papir"
+      className="overlay-in fixed inset-0 z-[100] flex flex-col bg-papir"
       style={{ paddingTop: "var(--safe-top)", paddingBottom: "var(--safe-bottom)" }}
       role="dialog"
       aria-modal="true"
@@ -249,7 +253,10 @@ function CookMode({
               </button>
               <button
                 type="button"
-                onClick={onClose}
+                onClick={() => {
+                  okHaptic();
+                  onClose();
+                }}
                 className="tap bg-gran px-5 py-3 text-[13px] font-medium text-snow transition-opacity hover:opacity-85"
               >
                 Fullfør
@@ -325,11 +332,11 @@ function CookMode({
       {/* Ingredients checklist — slide-up sheet */}
       {showIngredients && (
         <div
-          className="absolute inset-0 z-10 flex flex-col justify-end bg-ink/30"
+          className="scrim-in absolute inset-0 z-10 flex flex-col justify-end bg-ink/30"
           onClick={() => setShowIngredients(false)}
         >
           <div
-            className="max-h-[75%] overflow-y-auto bg-snow"
+            className="sheet-up scroll-y max-h-[75%] overflow-y-auto bg-snow"
             style={{ paddingBottom: "calc(var(--safe-bottom) + 16px)" }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -353,7 +360,10 @@ function CookMode({
                   <li key={ing.id}>
                     <button
                       type="button"
-                      onClick={() => setChecked((c) => ({ ...c, [ing.id]: !c[ing.id] }))}
+                      onClick={() => {
+                        tapHaptic();
+                        setChecked((c) => ({ ...c, [ing.id]: !c[ing.id] }));
+                      }}
                       className="tap flex w-full items-center gap-3 border-b border-line py-3 text-left"
                     >
                       <span

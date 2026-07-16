@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { PullToRefresh } from "@/components/app/pull-to-refresh";
+import { tapHaptic } from "@/lib/haptics";
 import { cn } from "@/lib/utils";
 
 type IconProps = { className?: string };
@@ -149,6 +150,7 @@ export function AppShell({
         <Link
           href="/import"
           aria-label="Importer oppskrift"
+          onClick={tapHaptic}
           className="tap -mt-6 flex h-[46px] w-[46px] items-center justify-center bg-gran text-snow"
           style={{
             borderRadius: "15px",
@@ -170,6 +172,7 @@ function NavItem({ tab, active }: { tab: Tab; active: boolean }) {
     <Link
       href={tab.href}
       aria-current={active ? "page" : undefined}
+      onClick={tapHaptic}
       className={cn(
         "tap flex flex-col items-center gap-1 px-2.5 py-1 transition-colors duration-150",
         active ? "text-gran" : "text-stone",

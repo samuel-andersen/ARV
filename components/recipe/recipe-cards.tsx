@@ -38,6 +38,8 @@ export function FeaturedCard({
           <img
             src={recipe.image_url}
             alt={recipe.title}
+            loading="lazy"
+            decoding="async"
             className="absolute inset-0 h-full w-full object-cover"
           />
         ) : (
@@ -70,6 +72,8 @@ export function FeedCard({ recipe }: { recipe: RecipeListItem }) {
           <img
             src={recipe.image_url}
             alt={recipe.title}
+            loading="lazy"
+            decoding="async"
             className="absolute inset-0 h-full w-full object-cover"
           />
         ) : (

@@ -45,6 +45,7 @@ export default async function RecipePage({
           <img
             src={recipe.image_url}
             alt={recipe.title}
+            decoding="async"
             className="absolute inset-0 h-full w-full object-cover"
           />
         ) : (
