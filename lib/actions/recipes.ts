@@ -25,21 +25,24 @@ export async function createRecipe(input: RecipeInput): Promise<RecipeActionResu
   } = await supabase.auth.getUser();
   if (!user) return { error: "Du må være logget inn." };
 
-  // Diagnostic guard: getUser() validates the token against the Auth server,
-  // but a recipe INSERT is enforced by Postgres RLS (`owner_id = auth.uid()`),
-  // which only passes if the *access token* rides along on the PostgREST
-  // request. If the DB can't even see our own profile row under RLS, the
-  // session isn't reaching the database — surface that plainly instead of a
-  // cryptic "row-level security policy" error.
-  const { data: seenByDb } = await supabase
+  // Diagnostic guard (ARV-DIAG-v2): getUser() validates the token against the
+  // Auth server, but a recipe INSERT is enforced by Postgres RLS
+  // (`owner_id = auth.uid()`), which only passes if the *access token* rides
+  // along on the PostgREST request. Probe whether the DB sees us at all by
+  // reading our own RLS-protected profile row (visible ⟺ auth.uid() == user.id).
+  const { data: seenByDb, error: probeError } = await supabase
     .from("profiles")
     .select("id")
     .eq("id", user.id)
     .maybeSingle();
+  const uidTail = user.id.slice(0, 8);
   if (!seenByDb) {
     return {
       error:
-        "Innlogget, men databasen ser deg ikke (sesjonen når ikke Postgres). Logg ut og inn igjen — vedvarer det, gi beskjed.",
+        `[ARV-DIAG-v2] Innlogget som …${uidTail}, men databasen ser deg ikke — ` +
+        `sesjonen (access-token) når ikke Postgres, så auth.uid() er null. ` +
+        (probeError ? `(${probeError.message}) ` : "") +
+        `Logg ut og inn igjen; vedvarer det, gi meg beskjed.`,
     };
   }
 
@@ -61,7 +64,16 @@ export async function createRecipe(input: RecipeInput): Promise<RecipeActionResu
     .select("id")
     .single();
 
-  if (error || !recipe) return { error: error?.message ?? "Kunne ikke lagre oppskriften." };
+  if (error || !recipe) {
+    // The DB *did* see us (profile row visible ⟺ auth.uid() == user.id), yet
+    // the insert with owner_id = user.id was still rejected. That points away
+    // from the session and at the row itself or a stale policy.
+    return {
+      error:
+        `[ARV-DIAG-v2] Databasen ser deg (…${uidTail}), men insert ble avvist: ` +
+        `${error?.message ?? "ukjent"}. owner_id ble satt til …${uidTail}.`,
+    };
+  }
 
   await writeRecipeChildren(supabase, recipe.id, data);
   await upsertRecipeTags(supabase, recipe.id, data.tags);
