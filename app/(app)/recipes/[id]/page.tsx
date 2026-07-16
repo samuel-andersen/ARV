@@ -5,9 +5,19 @@ import { deleteRecipe } from "@/lib/actions/recipes";
 import { RecipeBody } from "@/components/recipe/recipe-body";
 import { ShareToggle } from "@/components/recipe/share-toggle";
 import { CookModeLauncher } from "@/components/recipe/cook-mode";
-import { Eyebrow } from "@/components/ui/label";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+
+const LABEL = "text-[9.5px] font-medium uppercase tracking-[0.22em] text-stone";
+
+function totalTime(prep: number | null, cook: number | null): string | null {
+  const total = (prep ?? 0) + (cook ?? 0);
+  if (total <= 0) return null;
+  if (total < 60) return `${total} min`;
+  const h = Math.floor(total / 60);
+  const m = total % 60;
+  return m ? `${h} t ${m} min` : `${h} t`;
+}
 
 export default async function RecipePage({
   params,
@@ -19,104 +29,133 @@ export default async function RecipePage({
   if (!recipe) notFound();
 
   const del = deleteRecipe.bind(null, id);
-  const totalMin = (recipe.prep_min ?? 0) + (recipe.cook_min ?? 0);
+  const time = totalTime(recipe.prep_min, recipe.cook_min);
+  const credit = recipe.is_original
+    ? "Din oppskrift"
+    : recipe.source_author
+      ? `Etter ${recipe.source_author}`
+      : recipe.source_platform;
 
   return (
-    <article className="paper-sheet mx-auto max-w-3xl p-6 sm:p-10">
-      <div className="flex items-start justify-between gap-6">
+    <article className="-mx-5 bg-snow sm:mx-0 sm:border sm:border-line">
+      {/* Photo hero with a white back affordance. */}
+      <div className="relative aspect-[4/3] w-full overflow-hidden bg-salvie">
+        {recipe.image_url ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={recipe.image_url}
+            alt={recipe.title}
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="serif text-5xl font-light text-gran/50">Arv</span>
+          </div>
+        )}
+        <Link
+          href="/library"
+          aria-label="Tilbake"
+          className="tap absolute left-3.5 top-3.5 flex h-9 w-9 items-center justify-center bg-snow text-lg font-light text-ink"
+        >
+          ←
+        </Link>
+      </div>
+
+      <div className="flex flex-col gap-5 px-5 py-6 sm:px-8">
         <div>
-          <Eyebrow>{recipe.is_original ? "Own recipe" : recipe.source_platform}</Eyebrow>
-          <h1 className="mt-3 text-4xl font-light leading-tight text-ink">
+          <h1 className="serif text-[30px] font-normal leading-tight text-ink">
             {recipe.title}
           </h1>
-          {recipe.description && (
-            <p className="mt-3 max-w-2xl font-light text-stone">
-              {recipe.description}
-            </p>
-          )}
+          <p className="mt-2 text-[12.5px] font-light text-stone">
+            {credit}
+            {` · ${recipe.servings} porsjoner`}
+            {time ? ` · ${time}` : ""}
+          </p>
         </div>
-        <div className="flex shrink-0 items-center gap-4">
-          <Link
-            href={`/recipes/${id}/edit`}
-            className="text-sm font-light text-gran hover:text-ink"
-          >
-            Edit
-          </Link>
-          <form action={del}>
-            <button
-              type="submit"
-              className="text-[11px] font-medium uppercase tracking-[0.22em] text-stone hover:text-negative"
-            >
-              Delete
-            </button>
-          </form>
-        </div>
-      </div>
 
-      <div className="mt-4 flex flex-wrap gap-x-6 gap-y-1 text-xs font-light text-stone">
-        <span>serves {recipe.servings}</span>
-        {recipe.prep_min != null && <span>prep {recipe.prep_min} min</span>}
-        {recipe.cook_min != null && <span>cook {recipe.cook_min} min</span>}
-        {totalMin > 0 && <span>total {totalMin} min</span>}
-        {recipe.tags.map((t) => (
-          <span key={t} className="text-gran">
-            #{t}
-          </span>
-        ))}
-      </div>
-
-      {recipe.story && (
-        <blockquote className="mt-8 border-l-2 border-salvie pl-5">
-          <p className="max-w-2xl font-light leading-relaxed text-ink">
+        {recipe.story && (
+          <p className="serif-italic border-l-2 border-salvie pl-3.5 text-[14.5px] font-light leading-relaxed text-gran">
             {recipe.story}
           </p>
-        </blockquote>
-      )}
+        )}
 
-      <div className="mt-8 max-w-xs">
-        <CookModeLauncher
-          title={recipe.title}
-          ingredients={recipe.ingredients}
-          steps={recipe.steps}
-        />
-      </div>
+        {/* Edit bar. */}
+        <div className="flex items-center gap-5 border-y border-line py-2.5">
+          <Link href={`/recipes/${id}/edit`} className="text-xs font-medium text-gran hover:text-ink">
+            Rediger
+          </Link>
+          {recipe.tags.length > 0 && (
+            <span className="ml-auto flex flex-wrap gap-x-3 text-[11px] font-light text-stone">
+              {recipe.tags.map((t) => (
+                <span key={t}>#{t}</span>
+              ))}
+            </span>
+          )}
+        </div>
 
-      <div className="mt-12">
         <RecipeBody
           baseServings={recipe.servings}
           ingredients={recipe.ingredients}
           steps={recipe.steps}
         />
-      </div>
 
-      <div className="mt-12 max-w-xl">
-        <ShareToggle
-          recipeId={recipe.id}
-          initialPublic={recipe.is_public}
-          initialSlug={recipe.share_slug}
-          siteUrl={SITE_URL}
-        />
-      </div>
+        {/* Share. */}
+        <div className="mt-2">
+          <ShareToggle
+            recipeId={recipe.id}
+            initialPublic={recipe.is_public}
+            initialSlug={recipe.share_slug}
+            siteUrl={SITE_URL}
+          />
+        </div>
 
-      {/* Attribution — always present for imports. */}
-      {!recipe.is_original && (recipe.source_author || recipe.source_url) && (
-        <footer className="mt-16 border-t border-line pt-6">
-          <Eyebrow>Source</Eyebrow>
-          <p className="mt-3 font-light text-stone">
-            {recipe.source_author && <span>{recipe.source_author} · </span>}
-            {recipe.source_url && (
-              <a
-                href={recipe.source_url}
-                target="_blank"
-                rel="noreferrer noopener"
-                className="text-gran hover:text-ink"
-              >
-                {recipe.source_platform}
-              </a>
-            )}
-          </p>
-        </footer>
-      )}
+        {/* Source attribution — always present for imports. */}
+        {!recipe.is_original && (recipe.source_author || recipe.source_url) && (
+          <div className="border-t border-line pt-5">
+            <span className={LABEL}>Kilden</span>
+            <p className="mt-2 text-[12.5px] font-light text-stone">
+              Arv husker hvor den kom fra.{" "}
+              {recipe.source_author && <span>{recipe.source_author} · </span>}
+              {recipe.source_url && (
+                <a
+                  href={recipe.source_url}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  className="text-gran hover:text-ink"
+                >
+                  {recipe.source_platform}
+                </a>
+              )}
+            </p>
+          </div>
+        )}
+
+        {/* Primary actions. */}
+        <div className="mt-2 flex gap-2.5">
+          <div className="flex-1">
+            <CookModeLauncher
+              title={recipe.title}
+              ingredients={recipe.ingredients}
+              steps={recipe.steps}
+            />
+          </div>
+          <Link
+            href="/books"
+            className="tap flex items-center justify-center border border-line px-4 text-[13px] font-medium text-gran transition-colors hover:border-gran"
+          >
+            + Boken
+          </Link>
+        </div>
+
+        <form action={del} className="pt-2">
+          <button
+            type="submit"
+            className="text-[11px] font-medium uppercase tracking-[0.22em] text-stone hover:text-negative"
+          >
+            Slett oppskrift
+          </button>
+        </form>
+      </div>
     </article>
   );
 }

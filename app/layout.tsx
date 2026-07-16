@@ -1,44 +1,46 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Fraunces } from "next/font/google";
+import { Inter, Source_Serif_4 } from "next/font/google";
 import "./globals.css";
 
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
   display: "swap",
-  // House style constrains weights to 300 / 400 / 500. No bold, no italics.
+  // Chrome voice. Weights constrained to 300 / 400 / 500 — never bold, never italic.
   weight: ["300", "400", "500"],
 });
 
-// Serif for book surfaces only (the deliberate quiet-app / rich-book contrast).
-const fraunces = Fraunces({
+// The serif "where the food lives" — recipe titles, step numerals, stories,
+// notes, book pages. Italic (300) carries the handwritten, personal voice.
+const serif = Source_Serif_4({
   subsets: ["latin"],
-  variable: "--font-fraunces",
+  variable: "--font-serif",
   display: "swap",
   weight: ["300", "400", "500", "600"],
+  style: ["normal", "italic"],
 });
 
 export const metadata: Metadata = {
   title: {
-    default: "Arv — From scroll to shelf",
+    default: "Arv — Fra feed til familiearv",
     template: "%s · Arv",
   },
   description:
-    "A source-to-print system for recipe books. Capture recipes from social media and your own kitchen, and turn them into a printed hardcover.",
+    "Arv gjør oppskrifter fra Instagram, TikTok og YouTube — og familiens egne — til en trykt, innbundet kokebok. Fra feed til familiearv.",
   applicationName: "Arv",
   metadataBase: new URL("https://arv.kitchen"),
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
     title: "Arv",
-    // White status text over the Gran header when installed to the home screen.
-    statusBarStyle: "black-translucent",
+    // Dark status text over the warm Papir canvas when installed.
+    statusBarStyle: "default",
   },
 };
 
 export const viewport: Viewport = {
-  // Brand chrome — Gran in the browser/PWA UI.
-  themeColor: "#49604F",
+  // Warm Papir canvas — the app ground shows through the browser/PWA UI.
+  themeColor: "#FBFAF8",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
@@ -50,7 +52,7 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${inter.variable} ${fraunces.variable}`}>
+    <html lang="nb" className={`${inter.variable} ${serif.variable}`}>
       <body>{children}</body>
     </html>
   );

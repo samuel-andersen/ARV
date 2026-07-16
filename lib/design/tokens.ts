@@ -16,8 +16,10 @@
  */
 
 export const color = {
-  /** Canvas. */
+  /** Pure white — cards, book pages, the "paper" the recipe lives on. */
   snow: "#FFFFFF",
+  /** The app canvas — warm off-white (knekt hvit, ikke klinisk). */
+  papir: "#FBFAF8",
   /** Secondary surface. */
   mist: "#F5F5F4",
   /** Hairlines only — never a fill. */
@@ -46,17 +48,19 @@ export const onInk = {
 } as const;
 
 /**
- * Typography. Inter only in app chrome; weights are constrained on purpose —
- * 300 for all display sizes (thin-at-large is the signature), 400 body,
- * 500 labels/buttons. No bold, no italics anywhere in chrome.
- *
- * Book pages are the deliberate exception: themes may use a serif (Fraunces).
- * The quiet app / rich book contrast is intentional and lives in `book`.
+ * Two voices. Inter carries the chrome — weights constrained to 300 (all
+ * display sizes; thin-at-large is the signature), 400 body, 500 labels/buttons,
+ * never bold, never italic. Source Serif 4 is "where the food lives": recipe
+ * titles, step numerals, stories, notes and every book page — italic (300)
+ * for the handwritten, personal voice. The contrast between them IS the
+ * identity: calm chrome, warm food.
  */
 export const font = {
   sans: "var(--font-inter), Inter, ui-sans-serif, system-ui, sans-serif",
-  /** Book-only serif face (loaded inside book render surfaces, not chrome). */
-  bookSerif: "Fraunces, ui-serif, Georgia, serif",
+  /** The serif voice (recipe/book surfaces). */
+  serif: "var(--font-serif), 'Source Serif 4', ui-serif, Georgia, serif",
+  /** @deprecated alias for `serif`. */
+  bookSerif: "Source Serif 4, ui-serif, Georgia, serif",
 } as const;
 
 export const fontWeight = {

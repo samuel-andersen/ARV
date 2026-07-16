@@ -1,8 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Eyebrow } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import type { Ingredient, Step } from "@/lib/schemas/recipe";
 
@@ -40,9 +38,13 @@ export function CookModeLauncher({
 
   return (
     <>
-      <Button className="w-full sm:w-auto" onClick={() => setOpen(true)}>
-        Cook mode
-      </Button>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="tap w-full bg-gran px-5 py-[15px] text-[13px] font-medium text-snow transition-opacity hover:opacity-85"
+      >
+        Begynn å lage
+      </button>
       {open && (
         <CookMode
           title={title}
@@ -170,47 +172,44 @@ function CookMode({
   }
 
   const checkedCount = Object.values(checked).filter(Boolean).length;
+  const total = steps.length;
+  const stepNo = String(Math.min(index, total - 1) + 1).padStart(2, "0");
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex flex-col bg-snow"
-      style={{
-        paddingTop: "var(--safe-top)",
-        paddingBottom: "var(--safe-bottom)",
-      }}
+      className="fixed inset-0 z-[100] flex flex-col bg-papir"
+      style={{ paddingTop: "var(--safe-top)", paddingBottom: "var(--safe-bottom)" }}
       role="dialog"
       aria-modal="true"
-      aria-label={`Cook mode: ${title}`}
+      aria-label={`Kokkemodus: ${title}`}
     >
-      {/* Top bar */}
-      <div className="flex items-center justify-between px-5 py-3">
-        <span className="text-[11px] font-medium uppercase tracking-[0.22em] text-stone tabular-nums">
-          {atEnd ? "Done" : `Step ${index + 1} / ${steps.length}`}
-        </span>
-        <span className="max-w-[50%] truncate text-[11px] font-medium uppercase tracking-[0.22em] text-stone">
-          {title}
-        </span>
+      {/* Top: progress dots + close */}
+      <div className="flex items-center justify-between px-6 py-4">
+        <div className="flex gap-1.5">
+          {steps.map((s, i) => (
+            <span
+              key={s.id}
+              className={cn(
+                "h-1 transition-all duration-[250ms]",
+                i === index ? "w-[22px]" : "w-2.5",
+                i <= index ? "bg-gran" : "bg-line",
+              )}
+            />
+          ))}
+        </div>
         <button
           type="button"
           onClick={onClose}
-          className="tap -mr-2 px-2 text-2xl font-light leading-none text-stone hover:text-gran"
-          aria-label="Close cook mode"
+          className="tap -mr-2 px-2 text-xl font-light leading-none text-stone hover:text-gran"
+          aria-label="Lukk kokkemodus"
         >
           ×
         </button>
       </div>
 
-      {/* Progress hairline */}
-      <div className="h-px bg-line">
-        <div
-          className="h-px bg-gran transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]"
-          style={{ width: `${(Math.min(index, steps.length) / steps.length) * 100}%` }}
-        />
-      </div>
-
       {/* Step area — tap right to advance, left to go back. */}
       <div
-        className="relative flex flex-1 select-none flex-col items-center justify-center px-7"
+        className="relative flex flex-1 select-none flex-col justify-center gap-8 px-7"
         onClick={(e) => {
           if (showIngredients) return;
           const half = e.currentTarget.clientWidth / 2;
@@ -232,25 +231,37 @@ function CookMode({
         }}
       >
         {atEnd ? (
-          <div className="text-center" onClick={(e) => e.stopPropagation()}>
-            <div className="mx-auto flex h-16 w-16 items-center justify-center bg-salvie text-2xl text-gran">
+          <div onClick={(e) => e.stopPropagation()}>
+            <div className="flex h-11 w-11 items-center justify-center bg-salvie text-lg text-gran">
               ✓
             </div>
-            <h2 className="mt-6 text-3xl font-light text-ink">All done.</h2>
-            <p className="mt-3 font-light text-stone">Enjoy — you cooked {title}.</p>
-            <div className="mt-8 flex justify-center gap-3">
-              <Button variant="secondary" onClick={() => setIndex(steps.length - 1)}>
-                Back
-              </Button>
-              <Button onClick={onClose}>Finish</Button>
+            <h2 className="serif mt-6 text-[30px] font-normal leading-tight text-ink">
+              Ferdig laget.
+            </h2>
+            <p className="mt-3 font-light text-stone">Vel bekomme — du lagde {title}.</p>
+            <div className="mt-8 flex gap-2.5">
+              <button
+                type="button"
+                onClick={() => setIndex(steps.length - 1)}
+                className="tap border border-line px-5 py-3 text-[13px] font-medium text-gran transition-colors hover:border-gran"
+              >
+                Tilbake
+              </button>
+              <button
+                type="button"
+                onClick={onClose}
+                className="tap bg-gran px-5 py-3 text-[13px] font-medium text-snow transition-opacity hover:opacity-85"
+              >
+                Fullfør
+              </button>
             </div>
           </div>
         ) : (
-          <div className="w-full max-w-xl text-center">
-            <span className="text-[80px] font-light leading-none text-fog tabular-nums">
-              {index + 1}
+          <>
+            <span className="text-[10px] font-medium uppercase tracking-[0.22em] text-gran">
+              Steg {stepNo} av {String(total).padStart(2, "0")}
             </span>
-            <p className="mt-6 text-2xl font-light leading-relaxed text-ink sm:text-3xl">
+            <p className="serif text-[30px] font-normal leading-[1.3] text-ink" style={{ textWrap: "pretty" }}>
               {step!.text}
             </p>
 
@@ -261,60 +272,55 @@ function CookMode({
                   e.stopPropagation();
                   toggleTimer(step!.id);
                 }}
-                className={cn(
-                  "mt-8 inline-flex items-center gap-3 px-5 py-3 text-lg tabular-nums transition-colors duration-150",
-                  timers[step!.id].done
-                    ? "bg-salvie text-positive"
-                    : "bg-salvie text-gran",
-                )}
+                className="block w-full text-left"
               >
-                <span className="text-sm font-medium uppercase tracking-[0.18em]">
-                  {timers[step!.id].done
-                    ? "Time's up"
-                    : timers[step!.id].running
-                      ? "Pause"
-                      : timers[step!.id].remaining < (step!.timer_seconds ?? 0)
-                        ? "Resume"
-                        : "Start"}
-                </span>
-                <span className="font-light">{fmt(timers[step!.id].remaining)}</span>
+                <div className="mb-2 flex items-center justify-between text-[10.5px] font-medium uppercase tracking-[0.22em] text-stone">
+                  <span>
+                    {timers[step!.id].done
+                      ? "Tiden er ute"
+                      : timers[step!.id].running
+                        ? "Pause"
+                        : timers[step!.id].remaining < (step!.timer_seconds ?? 0)
+                          ? "Fortsett"
+                          : "Start timer"}
+                  </span>
+                  <span className="text-gran tabular-nums">
+                    {fmt(timers[step!.id].remaining)}
+                  </span>
+                </div>
+                <div className="relative h-1.5 bg-salvie">
+                  <div
+                    className="absolute inset-y-0 left-0 bg-gran transition-all duration-[250ms]"
+                    style={{
+                      width: `${((((step!.timer_seconds ?? 1) - timers[step!.id].remaining) / (step!.timer_seconds ?? 1)) * 100).toFixed(1)}%`,
+                    }}
+                  />
+                </div>
               </button>
             )}
-          </div>
+          </>
         )}
 
         {!atEnd && (
-          <p className="pointer-events-none absolute bottom-4 text-[11px] uppercase tracking-[0.22em] text-fog">
-            Tap to continue · swipe to move
+          <p className="pointer-events-none absolute inset-x-0 bottom-8 text-center text-[12.5px] font-light text-stone">
+            Trykk hvor som helst for neste steg
           </p>
         )}
       </div>
 
-      {/* Bottom controls */}
-      <div className="flex items-center justify-between border-t border-line px-5 py-3">
-        <button
-          type="button"
-          onClick={prev}
-          disabled={index === 0}
-          className="tap text-sm font-light text-gran disabled:text-fog"
-        >
-          ‹ Prev
-        </button>
+      {/* Bottom Salvie bar — ingredients */}
+      {!atEnd && (
         <button
           type="button"
           onClick={() => setShowIngredients(true)}
-          className="tap text-[11px] font-medium uppercase tracking-[0.22em] text-stone hover:text-gran"
+          className="tap flex items-center justify-between border-t border-line bg-salvie px-6 py-3.5"
         >
-          Ingredients{checkedCount > 0 ? ` · ${checkedCount}/${ingredients.length}` : ""}
+          <span className="text-[10.5px] font-medium uppercase tracking-[0.22em] text-gran">
+            Ingredienser · {checkedCount} av {ingredients.length} brukt
+          </span>
+          <span className="text-[13px] font-light text-gran">↑</span>
         </button>
-        <button
-          type="button"
-          onClick={next}
-          className="tap text-sm font-light text-gran"
-        >
-          {index >= steps.length - 1 ? "Finish ›" : "Next ›"}
-        </button>
-      </div>
+      )}
 
       {/* Ingredients checklist — slide-up sheet */}
       {showIngredients && (
@@ -328,12 +334,14 @@ function CookMode({
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between px-6 pb-2 pt-5">
-              <Eyebrow>Ingredients</Eyebrow>
+              <span className="text-[9.5px] font-medium uppercase tracking-[0.22em] text-stone">
+                Ingredienser
+              </span>
               <button
                 type="button"
                 onClick={() => setShowIngredients(false)}
-                className="tap px-2 text-2xl font-light leading-none text-stone hover:text-gran"
-                aria-label="Close ingredients"
+                className="tap px-2 text-xl font-light leading-none text-stone hover:text-gran"
+                aria-label="Lukk ingredienser"
               >
                 ×
               </button>
@@ -356,14 +364,14 @@ function CookMode({
                       >
                         ✓
                       </span>
-                      <span className={cn("flex-1 font-light", on ? "text-fog line-through" : "text-ink")}>
+                      <span className={cn("flex-1 text-[13.5px]", on ? "text-fog line-through" : "text-ink")}>
                         {ing.name}
                         {ing.note ? <span className="text-stone">, {ing.note}</span> : null}
                       </span>
-                      <span className={cn("shrink-0 font-light", on ? "text-fog" : "text-stone")}>
+                      <span className={cn("shrink-0 text-[13.5px]", on ? "text-fog" : "text-stone")}>
                         {ing.quantity != null
                           ? `${ing.quantity}${ing.unit ? " " + ing.unit : ""}`
-                          : ing.unit ?? ""}
+                          : (ing.unit ?? "")}
                       </span>
                     </button>
                   </li>

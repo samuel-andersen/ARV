@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { signOut } from "@/lib/actions/auth";
 import { PullToRefresh } from "@/components/app/pull-to-refresh";
 import { cn } from "@/lib/utils";
 
@@ -11,49 +10,46 @@ type IconProps = { className?: string };
 const stroke = {
   fill: "none",
   stroke: "currentColor",
-  strokeWidth: 1.6,
+  strokeWidth: 1.5,
   strokeLinecap: "round" as const,
   strokeLinejoin: "round" as const,
 };
 
-function GridIcon({ className }: IconProps) {
+// Icon paths mirror the handoff prototype exactly.
+function HomeIcon({ className }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" className={className} {...stroke}>
-      <rect x="3.5" y="3.5" width="7" height="7" rx="1.4" />
-      <rect x="13.5" y="3.5" width="7" height="7" rx="1.4" />
-      <rect x="3.5" y="13.5" width="7" height="7" rx="1.4" />
-      <rect x="13.5" y="13.5" width="7" height="7" rx="1.4" />
+      <path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-5v-6h-4v6H5a1 1 0 0 1-1-1z" />
+    </svg>
+  );
+}
+function SearchIcon({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} {...stroke}>
+      <circle cx="11" cy="11" r="6.5" />
+      <path d="m16 16 4.5 4.5" />
     </svg>
   );
 }
 function BookIcon({ className }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" className={className} {...stroke}>
-      <path d="M12 6.5C10.4 5.3 8 4.8 6 4.8s-3.5.4-3.5.4v13s1.5-.4 3.5-.4 4 .5 6 1.7c2-1.2 4-1.7 6-1.7s3.5.4 3.5.4v-13S20 4.8 18 4.8s-4.4.5-6 1.7z" />
-      <path d="M12 6.5v13" />
+      <path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H11v16H5.5A1.5 1.5 0 0 1 4 18.5zM20 5.5A1.5 1.5 0 0 0 18.5 4H13v16h5.5a1.5 1.5 0 0 0 1.5-1.5z" />
+    </svg>
+  );
+}
+function ProfileIcon({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} {...stroke}>
+      <circle cx="12" cy="8" r="3.5" />
+      <path d="M5 20c1.2-3.2 3.8-5 7-5s5.8 1.8 7 5" />
     </svg>
   );
 }
 function PlusIcon({ className }: IconProps) {
   return (
-    <svg viewBox="0 0 24 24" className={className} {...stroke} strokeWidth={1.9}>
-      <path d="M12 5.5v13M5.5 12h13" />
-    </svg>
-  );
-}
-function MailIcon({ className }: IconProps) {
-  return (
     <svg viewBox="0 0 24 24" className={className} {...stroke}>
-      <rect x="3" y="5" width="18" height="14" rx="2.2" />
-      <path d="M3.5 7.5l8.5 5.5 8.5-5.5" />
-    </svg>
-  );
-}
-function PersonIcon({ className }: IconProps) {
-  return (
-    <svg viewBox="0 0 24 24" className={className} {...stroke}>
-      <circle cx="12" cy="8.5" r="3.6" />
-      <path d="M4.5 20c0-3.9 3.4-5.8 7.5-5.8s7.5 1.9 7.5 5.8" />
+      <path d="M12 5v14M5 12h14" />
     </svg>
   );
 }
@@ -62,23 +58,35 @@ interface Tab {
   href: string;
   label: string;
   Icon: (p: IconProps) => React.ReactElement;
-  center?: boolean;
+  match: (pathname: string) => boolean;
 }
 
 const TABS: Tab[] = [
-  { href: "/library", label: "Library", Icon: GridIcon },
-  { href: "/books", label: "Books", Icon: BookIcon },
-  { href: "/import", label: "Import", Icon: PlusIcon, center: true },
-  { href: "/invites", label: "Invites", Icon: MailIcon },
-  { href: "/account", label: "You", Icon: PersonIcon },
+  {
+    href: "/library",
+    label: "Hjem",
+    Icon: HomeIcon,
+    match: (p) => p === "/library" || p.startsWith("/recipes"),
+  },
+  {
+    href: "/search",
+    label: "Søk",
+    Icon: SearchIcon,
+    match: (p) => p.startsWith("/search"),
+  },
+  {
+    href: "/books",
+    label: "Boken",
+    Icon: BookIcon,
+    match: (p) => p.startsWith("/books"),
+  },
+  {
+    href: "/account",
+    label: "Profil",
+    Icon: ProfileIcon,
+    match: (p) => p.startsWith("/account") || p.startsWith("/invites"),
+  },
 ];
-
-// Desktop header uses the same destinations minus the center emphasis.
-const NAV = TABS.filter((t) => !t.center);
-
-function isActive(pathname: string, href: string) {
-  return pathname === href || pathname.startsWith(href + "/");
-}
 
 export function AppShell({
   email,
@@ -88,66 +96,37 @@ export function AppShell({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const initial = (email?.trim()[0] ?? "A").toUpperCase();
 
   return (
-    <div className="min-h-[100dvh] bg-mist">
-      {/* Header — Gran brand chrome */}
+    <div className="min-h-[100dvh] bg-papir">
+      {/* Quiet top chrome — the Papir ground shows through; content scrolls under. */}
       <header
-        className="chrome-gran sticky top-0 z-40 border-b border-white/10"
+        className="app-chrome sticky top-0 z-40"
         style={{ paddingTop: "var(--safe-top)" }}
       >
-        <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-5">
-          <Link href="/library" className="tap text-base font-medium tracking-tight text-snow">
-            Arv
+        <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-5 sm:px-6">
+          <Link
+            href="/library"
+            className="tap text-xs font-medium uppercase tracking-[0.34em] text-ink"
+            aria-label="Arv — hjem"
+          >
+            ARV
           </Link>
-
-          {/* Desktop nav */}
-          <nav className="hidden items-center gap-7 text-sm sm:flex">
-            {NAV.map((t) => (
-              <Link
-                key={t.href}
-                href={t.href}
-                className={cn(
-                  "font-light transition-colors duration-150",
-                  isActive(pathname, t.href) ? "text-snow" : "text-snow/65 hover:text-snow",
-                )}
-              >
-                {t.label}
-              </Link>
-            ))}
-            <Link
-              href="/import"
-              className={cn(
-                "font-light transition-colors duration-150",
-                isActive(pathname, "/import") ? "text-snow" : "text-snow/65 hover:text-snow",
-              )}
-            >
-              Import
-            </Link>
-            <form action={signOut}>
-              <button
-                type="submit"
-                className="text-[11px] font-medium uppercase tracking-[0.22em] text-snow/60 hover:text-snow"
-                title={email ?? undefined}
-              >
-                Sign out
-              </button>
-            </form>
-          </nav>
-
-          {/* Mobile: brand only in header; nav lives in the bottom bar. */}
-          <span className="text-[11px] font-medium uppercase tracking-[0.22em] text-snow/60 sm:hidden">
-            arv.kitchen
-          </span>
+          <Link
+            href="/account"
+            aria-label="Profil"
+            className="tap flex h-8 w-8 items-center justify-center bg-salvie text-xs font-medium text-gran"
+          >
+            {initial}
+          </Link>
         </div>
       </header>
 
-      {/* Content — leaves room for the mobile tab bar. */}
+      {/* Content — pure Papir ground, room for the floating nav. */}
       <main
-        className="scroll-y mx-auto max-w-5xl px-5 py-8 sm:px-6 sm:py-10"
-        style={{
-          paddingBottom: "calc(var(--tabbar-h) + var(--safe-bottom) + 24px)",
-        }}
+        className="scroll-y mx-auto max-w-5xl px-5 pt-6 sm:px-6"
+        style={{ paddingBottom: "calc(96px + var(--safe-bottom))" }}
       >
         <PullToRefresh>
           <div key={pathname} className="page-enter">
@@ -156,46 +135,50 @@ export function AppShell({
         </PullToRefresh>
       </main>
 
-      {/* Bottom tab bar — Gran chrome, mobile only */}
+      {/* Floating bottom nav — translucent Papir material, Gran only for the
+          active tab and the raised import button. */}
       <nav
-        className="chrome-gran fixed inset-x-0 bottom-0 z-40 border-t border-white/10 sm:hidden"
-        style={{ paddingBottom: "var(--safe-bottom)" }}
-        aria-label="Primary"
+        className="nav-float fixed inset-x-4 z-40 flex items-center justify-between px-6 py-2.5"
+        style={{ bottom: "calc(20px + var(--safe-bottom))", borderRadius: "22px" }}
+        aria-label="Hovedmeny"
       >
-        <ul className="mx-auto flex h-[var(--tabbar-h)] max-w-md items-stretch justify-around">
-          {TABS.map((t) => {
-            const active = isActive(pathname, t.href);
-            if (t.center) {
-              return (
-                <li key={t.href} className="flex items-center">
-                  <Link
-                    href={t.href}
-                    aria-label={t.label}
-                    className="tap -mt-6 flex h-14 w-14 items-center justify-center bg-snow text-gran shadow-[0_10px_22px_-8px_rgba(20,20,19,0.45)]"
-                  >
-                    <t.Icon className="h-6 w-6" />
-                  </Link>
-                </li>
-              );
-            }
-            return (
-              <li key={t.href} className="flex-1">
-                <Link
-                  href={t.href}
-                  aria-current={active ? "page" : undefined}
-                  className={cn(
-                    "tap flex h-full flex-col items-center justify-center gap-1 transition-colors duration-150",
-                    active ? "text-snow" : "text-snow/55",
-                  )}
-                >
-                  <t.Icon className="h-[22px] w-[22px]" />
-                  <span className="text-[10px] tracking-[0.02em]">{t.label}</span>
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
+        <NavItem tab={TABS[0]} active={TABS[0].match(pathname)} />
+        <NavItem tab={TABS[1]} active={TABS[1].match(pathname)} />
+
+        {/* Raised import FAB — the one Gran-filled action, 15px radius. */}
+        <Link
+          href="/import"
+          aria-label="Importer oppskrift"
+          className="tap -mt-6 flex h-[46px] w-[46px] items-center justify-center bg-gran text-snow"
+          style={{
+            borderRadius: "15px",
+            boxShadow: "0 10px 22px -8px rgba(73,96,79,0.5)",
+          }}
+        >
+          <PlusIcon className="h-5 w-5" />
+        </Link>
+
+        <NavItem tab={TABS[2]} active={TABS[2].match(pathname)} />
+        <NavItem tab={TABS[3]} active={TABS[3].match(pathname)} />
       </nav>
     </div>
+  );
+}
+
+function NavItem({ tab, active }: { tab: Tab; active: boolean }) {
+  return (
+    <Link
+      href={tab.href}
+      aria-current={active ? "page" : undefined}
+      className={cn(
+        "tap flex flex-col items-center gap-1 px-2.5 py-1 transition-colors duration-150",
+        active ? "text-gran" : "text-stone",
+      )}
+    >
+      <tab.Icon className="h-[22px] w-[22px]" />
+      <span className="text-[8.5px] font-medium uppercase tracking-[0.12em]">
+        {tab.label}
+      </span>
+    </Link>
   );
 }

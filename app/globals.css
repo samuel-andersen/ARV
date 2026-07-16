@@ -7,8 +7,9 @@
  */
 
 @theme {
-  /* Palette — one hue, seven values, fixed roles. */
+  /* Palette — one hue, fixed roles. */
   --color-snow: #ffffff;
+  --color-papir: #fbfaf8;
   --color-mist: #f5f5f4;
   --color-line: #e2e2e0;
   --color-salvie: #e3eae4;
@@ -25,11 +26,14 @@
   --color-on-ink-body: #c9c9c7;
   --color-on-ink-muted: #6f6f6c;
 
-  /* Type. Inter only in chrome; book serif is scoped to book surfaces. */
+  /* Two voices. Inter is chrome; Source Serif 4 is where the food lives —
+     recipe titles, step numerals, stories, notes, book pages. */
   --font-sans: var(--font-inter), Inter, ui-sans-serif, system-ui, sans-serif;
-  --font-book: var(--font-fraunces), Fraunces, ui-serif, Georgia, serif;
+  --font-serif: var(--font-serif), "Source Serif 4", ui-serif, Georgia, serif;
+  /* Legacy alias — book surfaces still reference --font-book. */
+  --font-book: var(--font-serif), "Source Serif 4", ui-serif, Georgia, serif;
 
-  /* Zero radius is the law. */
+  /* Zero radius is the law (app chrome uses only three soft corners). */
   --radius-none: 0px;
 
   /* Motion. */
@@ -61,14 +65,23 @@ html {
 }
 
 body {
-  background-color: var(--color-snow);
+  /* Warm Papir ground — knekt hvit, ikke klinisk. Cards sit in pure Snow on top. */
+  background-color: var(--color-papir);
   color: var(--color-ink);
   font-family: var(--font-sans);
   font-weight: 400;
-  /* No bold, no italics as house style — components opt into 300/500 explicitly. */
   /* App-grade touch feel: no blue tap flash, no chained overscroll bounce. */
   -webkit-tap-highlight-color: transparent;
   overscroll-behavior-y: none;
+}
+
+/* The serif voice — recipe titles, step numerals, stories, notes, book pages. */
+.serif {
+  font-family: var(--font-serif);
+}
+.serif-italic {
+  font-family: var(--font-serif);
+  font-style: italic;
 }
 
 /* Safe-area tokens (notch, home indicator). Zero on non-inset devices. */
@@ -78,25 +91,55 @@ body {
   --tabbar-h: 56px;
 }
 
-/* Translucent, blurred chrome — the iOS material look. */
+/* Top chrome — a whisper of the Papir canvas, translucent so content scrolls
+   under it. Not a colored bar; the ground shows through. */
 .app-chrome {
-  background-color: rgba(255, 255, 255, 0.82);
+  background-color: rgba(251, 250, 248, 0.82);
   backdrop-filter: blur(18px) saturate(1.1);
   -webkit-backdrop-filter: blur(18px) saturate(1.1);
 }
 
-/* Gran chrome — the brand color as the primary app surface (header + tab bar). */
-.chrome-gran {
-  background-color: rgba(73, 96, 79, 0.94);
-  backdrop-filter: blur(18px) saturate(1.15);
-  -webkit-backdrop-filter: blur(18px) saturate(1.15);
+/* The floating bottom nav — Instagram-material: translucent Papir, blur,
+   hairline border, one soft shadow (the nav is a permitted exception). */
+.nav-float {
+  background-color: rgba(251, 250, 248, 0.72);
+  backdrop-filter: blur(18px) saturate(1.1);
+  -webkit-backdrop-filter: blur(18px) saturate(1.1);
+  border: 1px solid rgba(226, 226, 224, 0.7);
+  box-shadow: 0 16px 36px -16px rgba(20, 20, 19, 0.22);
 }
 
-/* Paper: pure white sheet on the soft ground — the recipe *is* paper.
-   Carries the product's only permitted soft shadow. */
+/* Paper: pure white sheet on the warm ground — the recipe *is* paper.
+   Carries the product's only other permitted soft shadow. */
 .paper-sheet {
   background-color: var(--color-snow);
   box-shadow: 0 14px 44px -20px rgba(20, 20, 19, 0.22);
+}
+
+/* Book/paper objects earn a Gran-tinted lift. */
+.book-lift {
+  box-shadow: 0 20px 44px -20px rgba(73, 96, 79, 0.28);
+}
+
+/* Feed card 3D flip — front photo, back the book page. */
+.flip {
+  transform-style: preserve-3d;
+  transition: transform 600ms var(--ease-arv);
+}
+.flip.is-flipped {
+  transform: rotateY(180deg);
+}
+.flip-face {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+.flip-back {
+  transform: rotateY(180deg);
+}
+@media (prefers-reduced-motion: reduce) {
+  .flip {
+    transition: none;
+  }
 }
 
 /* Tappable affordance: subtle press feedback, no hover dependency. */
