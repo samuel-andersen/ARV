@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { listRecipes } from "@/lib/data/recipes";
 import { getCurrentUser } from "@/lib/auth/user";
-import { FeaturedCard, FeedCard } from "@/components/recipe/recipe-cards";
+import { FeaturedCard } from "@/components/recipe/recipe-cards";
+import { LibraryFeed } from "@/components/recipe/library-feed";
 
 /** Time-aware Norwegian greeting. */
 function greeting(): string {
@@ -54,8 +55,12 @@ export default async function LibraryPage({
           type="url"
           name="url"
           inputMode="url"
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
+          enterKeyHint="go"
           placeholder="Lim inn lenke — Instagram, TikTok, YouTube"
-          className="min-w-0 flex-1 border border-r-0 border-line bg-snow px-4 py-[15px] text-[13px] text-ink placeholder:text-stone focus:border-gran focus:outline-none"
+          className="min-w-0 flex-1 border border-r-0 border-line bg-snow px-4 py-[15px] text-[16px] text-ink placeholder:text-stone/70 focus:border-gran focus:outline-none"
         />
         <button
           type="submit"
@@ -71,8 +76,9 @@ export default async function LibraryPage({
           type="search"
           name="q"
           defaultValue={q ?? ""}
+          enterKeyHint="search"
           placeholder="Søk i biblioteket"
-          className="w-full border border-line bg-transparent px-4 py-3 text-[13px] text-ink placeholder:text-stone focus:border-gran focus:outline-none"
+          className="w-full border border-line bg-transparent px-4 py-3 text-[16px] text-ink placeholder:text-stone/70 focus:border-gran focus:outline-none"
         />
       </form>
 
@@ -99,25 +105,7 @@ export default async function LibraryPage({
             </div>
           )}
 
-          {rest.length > 0 && (
-            <>
-              <div className="mt-8 flex items-baseline justify-between">
-                <span className="text-[9.5px] font-medium uppercase tracking-[0.22em] text-stone">
-                  {q ? "Treff" : "Biblioteket"}
-                </span>
-                <span className="text-[11.5px] font-light text-stone">
-                  {rest.length} {rest.length === 1 ? "oppskrift" : "oppskrifter"}
-                </span>
-              </div>
-              <ul className="mt-4 grid grid-cols-2 gap-4 lg:grid-cols-3">
-                {rest.map((r) => (
-                  <li key={r.id}>
-                    <FeedCard recipe={r} />
-                  </li>
-                ))}
-              </ul>
-            </>
-          )}
+          {rest.length > 0 && <LibraryFeed recipes={rest} />}
         </>
       )}
     </div>

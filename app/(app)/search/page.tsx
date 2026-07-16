@@ -35,8 +35,10 @@ export default async function SearchPage({
           name="q"
           defaultValue={query}
           autoFocus
+          autoCapitalize="none"
+          enterKeyHint="search"
           placeholder="Oppskrift, ingrediens eller @konto"
-          className="min-w-0 flex-1 border-none bg-transparent text-[13.5px] text-ink placeholder:text-stone focus:outline-none"
+          className="min-w-0 flex-1 border-none bg-transparent text-[16px] text-ink placeholder:text-stone/70 focus:outline-none"
         />
       </form>
 

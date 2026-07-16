@@ -14,6 +14,7 @@ export interface RecipeListItem {
   normalized: boolean;
   servings: number;
   ingredientCount: number;
+  tags: string[];
 }
 
 /** List the current user's recipes, newest first, with an optional text query. */
@@ -22,7 +23,7 @@ export async function listRecipes(query?: string): Promise<RecipeListItem[]> {
   let q = supabase
     .from("recipes")
     .select(
-      "id, title, description, image_url, source_platform, source_author, is_original, normalized, servings, ingredients(count)",
+      "id, title, description, image_url, source_platform, source_author, is_original, normalized, servings, ingredients(count), recipe_tags(tags(name))",
     )
     .order("created_at", { ascending: false });
 
@@ -35,6 +36,9 @@ export async function listRecipes(query?: string): Promise<RecipeListItem[]> {
 
   return (data ?? []).map((r) => {
     const ingredients = r.ingredients as unknown as { count: number }[];
+    const tags = ((r.recipe_tags ?? []) as unknown as { tags: { name: string } | null }[])
+      .map((rt) => rt.tags?.name)
+      .filter((n): n is string => !!n);
     return {
       id: r.id,
       title: r.title,
@@ -46,6 +50,7 @@ export async function listRecipes(query?: string): Promise<RecipeListItem[]> {
       normalized: r.normalized,
       servings: r.servings,
       ingredientCount: ingredients?.[0]?.count ?? 0,
+      tags,
     };
   });
 }
