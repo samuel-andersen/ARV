@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { setRecipeSharing } from "@/lib/actions/recipes";
 import { Eyebrow } from "@/components/ui/label";
 
@@ -20,7 +20,15 @@ export function ShareToggle({
   const [copied, setCopied] = useState(false);
   const [pending, startTransition] = useTransition();
 
-  const url = slug ? `${siteUrl}/r/${slug}` : "";
+  // Use the real deployed origin the page is actually served from, so the share
+  // link never shows localhost (the env fallback). Start from the SSR value to
+  // avoid a hydration mismatch, then swap to window.location.origin on mount.
+  const [origin, setOrigin] = useState(siteUrl);
+  useEffect(() => {
+    setOrigin(window.location.origin);
+  }, []);
+
+  const url = slug ? `${origin}/r/${slug}` : "";
 
   function toggle() {
     startTransition(async () => {

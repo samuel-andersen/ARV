@@ -2,21 +2,11 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
+import { getSiteUrl } from "@/lib/site-url";
 
-/**
- * The origin the user is actually on, read from the request — robust to a
- * missing/misconfigured NEXT_PUBLIC_SITE_URL. This is what the magic link
- * redirect must point at so it always lands back on the real domain.
- */
-async function requestOrigin(): Promise<string> {
-  const h = await headers();
-  const host = h.get("host");
-  if (!host) return process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
-  const proto = h.get("x-forwarded-proto") ?? (host.includes("localhost") ? "http" : "https");
-  return `${proto}://${host}`;
-}
+/** The origin the user is actually on — see lib/site-url. */
+const requestOrigin = getSiteUrl;
 
 export interface AuthActionState {
   error?: string;

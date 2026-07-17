@@ -12,8 +12,7 @@ import { RecipeActions } from "@/components/recipe/recipe-actions";
 import { RecipeNotes } from "@/components/recipe/recipe-notes";
 import { RecipeImageUpload } from "@/components/recipe/recipe-image-upload";
 import { PhotoGuide } from "@/components/recipe/photo-guide";
-
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+import { getSiteUrl } from "@/lib/site-url";
 
 const LABEL = "text-[9.5px] font-medium uppercase tracking-[0.22em] text-stone";
 
@@ -39,6 +38,7 @@ export default async function RecipePage({
   const sourceRaw = (recipe as unknown as { source_raw?: string | null }).source_raw ?? null;
   const ownerId = (recipe as unknown as { owner_id?: string }).owner_id;
   const isOwner = !!user && user.id === ownerId;
+  const siteUrl = await getSiteUrl();
 
   const time = totalTime(recipe.prep_min, recipe.cook_min);
   const credit = recipe.is_original
@@ -118,7 +118,7 @@ export default async function RecipePage({
             recipeId={recipe.id}
             initialPublic={recipe.is_public}
             initialSlug={recipe.share_slug}
-            siteUrl={SITE_URL}
+            siteUrl={siteUrl}
           />
         </div>
 
