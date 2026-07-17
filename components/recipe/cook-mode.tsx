@@ -1,9 +1,18 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { okHaptic, tapHaptic } from "@/lib/haptics";
+import { CookFinishPhoto } from "@/components/recipe/cook-finish-photo";
 import type { Ingredient, Step } from "@/lib/schemas/recipe";
+
+/** Owner-only capture at the end of cooking; absent on public/shared pages. */
+export interface CookPhotoTarget {
+  recipeId: string;
+  userId: string;
+  hasImage: boolean;
+}
 
 /** Minimal shapes so we don't depend on the DOM lib's experimental typings. */
 type WakeSentinel = { release: () => Promise<void>; released?: boolean };
@@ -28,10 +37,12 @@ export function CookModeLauncher({
   title,
   ingredients,
   steps,
+  photo,
 }: {
   title: string;
   ingredients: Ingredient[];
   steps: Step[];
+  photo?: CookPhotoTarget;
 }) {
   const [open, setOpen] = useState(false);
 
@@ -51,6 +62,7 @@ export function CookModeLauncher({
           title={title}
           ingredients={ingredients}
           steps={steps}
+          photo={photo}
           onClose={() => setOpen(false)}
         />
       )}
@@ -62,13 +74,24 @@ function CookMode({
   title,
   ingredients,
   steps,
+  photo,
   onClose,
 }: {
   title: string;
   ingredients: Ingredient[];
   steps: Step[];
+  photo?: CookPhotoTarget;
   onClose: () => void;
 }) {
+  const router = useRouter();
+  const photoSaved = useRef(false);
+
+  // If the cook photographed their result, refresh the recipe page on close so
+  // the new cover shows immediately.
+  const close = useCallback(() => {
+    if (photoSaved.current) router.refresh();
+    onClose();
+  }, [onClose, router]);
   const [index, setIndex] = useState(0);
   const [showIngredients, setShowIngredients] = useState(false);
   const [checked, setChecked] = useState<Record<string, boolean>>({});
@@ -157,11 +180,11 @@ function CookMode({
     function onKey(e: KeyboardEvent) {
       if (e.key === "ArrowRight" || e.key === " ") next();
       else if (e.key === "ArrowLeft") prev();
-      else if (e.key === "Escape") onClose();
+      else if (e.key === "Escape") close();
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [next, prev, onClose]);
+  }, [next, prev, close]);
 
   function toggleTimer(stepId: string) {
     setTimers((prev) => {
@@ -203,7 +226,7 @@ function CookMode({
         </div>
         <button
           type="button"
-          onClick={onClose}
+          onClick={close}
           className="tap -mr-2 px-2 text-xl font-light leading-none text-stone hover:text-gran"
           aria-label="Lukk kokkemodus"
         >
@@ -243,6 +266,19 @@ function CookMode({
               Ferdig laget.
             </h2>
             <p className="mt-3 font-light text-stone">Vel bekomme — du lagde {title}.</p>
+
+            {/* Close the loop: photograph the result → recipe cover → the book. */}
+            {photo && (
+              <CookFinishPhoto
+                recipeId={photo.recipeId}
+                userId={photo.userId}
+                hasImage={photo.hasImage}
+                onSaved={() => {
+                  photoSaved.current = true;
+                }}
+              />
+            )}
+
             <div className="mt-8 flex gap-2.5">
               <button
                 type="button"
@@ -255,7 +291,7 @@ function CookMode({
                 type="button"
                 onClick={() => {
                   okHaptic();
-                  onClose();
+                  close();
                 }}
                 className="tap bg-gran px-5 py-3 text-[13px] font-medium text-snow transition-opacity hover:opacity-85"
               >

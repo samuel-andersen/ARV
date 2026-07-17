@@ -2,49 +2,9 @@
 
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
 import { setRecipeImage } from "@/lib/actions/recipes";
+import { uploadRecipeCover, PRINT_MIN_EDGE } from "@/lib/upload/recipe-photo";
 import { tapHaptic, okHaptic, alertHaptic } from "@/lib/haptics";
-
-// Keep enough resolution for a full-page print at 300 PPI (~2400px on the long
-// edge for a 20cm page); cap only the truly huge originals so uploads stay sane.
-const MAX_EDGE = 3000;
-// Below this the photo starts to look soft on a full book page — we still allow
-// it but tell the user so nothing prints grainy by surprise.
-const PRINT_MIN_EDGE = 2000;
-const BUCKET = "recipe-images";
-
-type Prepared = { blob: Blob; longEdge: number };
-
-/**
- * Read the photo, note its true resolution (for print guidance), and downscale
- * only if it's larger than we need. Falls back to the original file on any
- * canvas failure.
- */
-async function prepare(file: File): Promise<Prepared> {
-  if (!file.type.startsWith("image/") || file.type === "image/gif") {
-    return { blob: file, longEdge: 0 };
-  }
-  try {
-    const bitmap = await createImageBitmap(file);
-    const longEdge = Math.max(bitmap.width, bitmap.height);
-    const scale = Math.min(1, MAX_EDGE / longEdge);
-    if (scale >= 1) return { blob: file, longEdge };
-
-    const canvas = document.createElement("canvas");
-    canvas.width = Math.round(bitmap.width * scale);
-    canvas.height = Math.round(bitmap.height * scale);
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return { blob: file, longEdge };
-    ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-    const blob = await new Promise<Blob | null>((resolve) =>
-      canvas.toBlob((b) => resolve(b), "image/jpeg", 0.92),
-    );
-    return { blob: blob ?? file, longEdge };
-  } catch {
-    return { blob: file, longEdge: 0 };
-  }
-}
 
 /**
  * Cover-photo uploader for a recipe. Shows a large "Legg til bilde" prompt over
@@ -81,23 +41,15 @@ export function RecipeImageUpload({
     setBusy(true);
     tapHaptic();
     try {
-      const supabase = createClient();
-      const { blob, longEdge } = await prepare(file);
-      const ext = blob.type === "image/jpeg" ? "jpg" : file.name.split(".").pop() || "jpg";
-      const path = `${userId}/${recipeId}-${Date.now()}.${ext}`;
+      const up = await uploadRecipeCover({ file, userId, recipeId });
+      if (up.error || !up.url) throw new Error(up.error ?? "Kunne ikke laste opp bildet.");
 
-      const { error: upErr } = await supabase.storage
-        .from(BUCKET)
-        .upload(path, blob, { upsert: true, contentType: blob.type || file.type });
-      if (upErr) throw new Error(upErr.message);
-
-      const { data: pub } = supabase.storage.from(BUCKET).getPublicUrl(path);
-      const res = await setRecipeImage(recipeId, pub.publicUrl);
+      const res = await setRecipeImage(recipeId, up.url);
       if (res?.error) throw new Error(res.error);
 
-      if (longEdge > 0 && longEdge < PRINT_MIN_EDGE) {
+      if (up.longEdge && up.longEdge > 0 && up.longEdge < PRINT_MIN_EDGE) {
         setNote(
-          `Bildet er ${longEdge} px bredt — fint på skjerm, men litt lavt for helside i trykk (best over ${PRINT_MIN_EDGE} px).`,
+          `Bildet er ${up.longEdge} px bredt — fint på skjerm, men litt lavt for helside i trykk (best over ${PRINT_MIN_EDGE} px).`,
         );
       }
       okHaptic();

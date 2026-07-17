@@ -155,6 +155,11 @@ export default async function RecipePage({
               title={recipe.title}
               ingredients={recipe.ingredients}
               steps={recipe.steps}
+              photo={
+                isOwner
+                  ? { recipeId: recipe.id, userId: user!.id, hasImage: !!recipe.image_url }
+                  : undefined
+              }
             />
           </div>
           <Link
