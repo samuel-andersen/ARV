@@ -1,8 +1,8 @@
-import Link from "next/link";
 import { listRecipes } from "@/lib/data/recipes";
 import { getCurrentUser } from "@/lib/auth/user";
 import { FeaturedCard } from "@/components/recipe/recipe-cards";
 import { LibraryFeed } from "@/components/recipe/library-feed";
+import { FirstRun } from "@/components/recipe/first-run";
 
 /** Time-aware Norwegian greeting. */
 function greeting(): string {
@@ -85,20 +85,16 @@ export default async function LibraryPage({
       </form>
 
       {recipes.length === 0 ? (
-        <div className="mt-10 border border-line bg-snow p-12 text-center">
-          <p className="serif-italic text-[15px] font-light leading-relaxed text-gran">
-            Oppskriftene du lagrer forsvinner med appene de bor i.
-          </p>
-          <p className="mt-3 text-sm font-light text-stone">
-            {q ? "Ingen oppskrifter matcher søket." : "Lim inn en lenke ovenfor, eller "}
-            {!q && (
-              <Link href="/recipes/new" className="text-gran hover:text-ink">
-                skriv inn en selv
-              </Link>
-            )}
-            {!q && "."}
-          </p>
-        </div>
+        q ? (
+          <div className="mt-10 border border-line bg-snow p-12 text-center">
+            <p className="serif-italic text-[15px] font-light leading-relaxed text-gran">
+              Ingen oppskrifter matcher søket.
+            </p>
+            <p className="mt-3 text-sm font-light text-stone">Prøv et annet ord.</p>
+          </div>
+        ) : (
+          <FirstRun />
+        )
       ) : (
         <>
           {featured && (
