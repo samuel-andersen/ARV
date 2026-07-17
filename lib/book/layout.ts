@@ -158,9 +158,7 @@ export function buildBookPages(
 
 /** Page count estimate for preflight (24–200 spec bounds). */
 export function estimatePageCount(pages: PageModel[]): number {
-  // Full-bleed photo recipes occupy a spread (2), everything else ~1 page.
-  return pages.reduce((n, p) => {
-    if (p.kind === "recipe" && p.template === "full_bleed_photo") return n + 2;
-    return n + 1;
-  }, 0);
+  // Each page descriptor renders as exactly one printed page, so the count is
+  // the number of pages — the same number the folios and the price are built on.
+  return pages.length;
 }

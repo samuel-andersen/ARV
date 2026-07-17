@@ -13,17 +13,19 @@ import { cn } from "@/lib/utils";
 
 type Mode = "url" | "text";
 
-const IMPORT_PHASES = [
-  "Ser videoen",
-  "Lytter til instruksjonene",
-  "Leser bildeteksten",
-  "Skriver ned oppskriften",
-];
+// Honest phases per source — the pipeline gathers text, then Claude understands
+// it and rewrites it to the house style. (We don't claim to "watch the video"
+// on a paste, and video/transcription aren't wired yet.)
+const PHASES: Record<Mode, string[]> = {
+  url: ["Henter kilden", "Leser innholdet", "Skriver om til husets stil", "Setter sammen oppskriften"],
+  text: ["Leser teksten", "Kjenner igjen ingrediensene", "Skriver om til husets stil", "Setter sammen oppskriften"],
+};
 
 /** The signature import moment — status lines surface one by one while the
  *  agent actually works. Cosmetic pacing over a real server call. */
-function ImportProgress({ source }: { source: string }) {
+function ImportProgress({ source, mode }: { source: string; mode: Mode }) {
   const [phase, setPhase] = useState(0);
+  const phases = PHASES[mode];
   useEffect(() => {
     const timers = [700, 1600, 2600, 3600].map((t, i) =>
       setTimeout(() => setPhase(i + 1), t),
@@ -34,7 +36,7 @@ function ImportProgress({ source }: { source: string }) {
     <div className="mt-8">
       <p className="truncate text-xs font-light text-stone">{source}</p>
       <div className="mt-8 flex flex-col gap-3.5">
-        {IMPORT_PHASES.map((p, i) => (
+        {phases.map((p, i) => (
           <div
             key={p}
             className="text-[10.5px] font-medium uppercase tracking-[0.22em] text-gran transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]"
@@ -163,13 +165,13 @@ export function ImportFlow({ initialUrl }: { initialUrl?: string }) {
       <Eyebrow>Importer</Eyebrow>
       <h1 className="serif mt-3 text-[27px] font-normal text-ink">Hent inn en oppskrift.</h1>
       <p className="mt-3 font-light text-stone">
-        Lim inn en lenke (YouTube fungerer fullt ut; Instagram og TikTok faller
-        tilbake til bildeteksten), eller lim inn selve teksten. Agenten ser,
-        leser og skriver den ned — og retter den til husets stil.
+        Lim inn selve oppskriftsteksten, så leser agenten den og skriver den om
+        til husets stil — på norsk, med ryddige mengder og steg. Du kan også lime
+        inn en lenke; klarer vi ikke å hente teksten, lim den inn selv.
       </p>
 
       {pending ? (
-        <ImportProgress source={mode === "url" ? url.trim() || "Henter…" : "Leser inn teksten…"} />
+        <ImportProgress source={mode === "url" ? url.trim() || "Henter…" : "Leser inn teksten…"} mode={mode} />
       ) : (
         <>
           <div className="mt-8 flex gap-px bg-line">

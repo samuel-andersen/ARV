@@ -33,11 +33,11 @@ export async function startImport(input: {
     screenshot_paths: input.screenshot_paths ?? [],
   });
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? "Invalid import request." };
+    return { error: parsed.error.issues[0]?.message ?? "Ugyldig import — sjekk lenken eller teksten." };
   }
 
   const user = await getCurrentUser();
-  if (!user) return { error: "You must be signed in." };
+  if (!user) return { error: "Du må være logget inn." };
 
   const supabase = await createClient();
 
@@ -51,7 +51,7 @@ export async function startImport(input: {
     if ((count ?? 0) >= FREE_IMPORT_LIMIT) {
       return {
         upgradeRequired: true,
-        error: `Free plan includes ${FREE_IMPORT_LIMIT} imports. Upgrade to Pro for unlimited imports.`,
+        error: `Gratisplanen inkluderer ${FREE_IMPORT_LIMIT} importer. Oppgrader til Arv Pro for ubegrenset import.`,
       };
     }
   }

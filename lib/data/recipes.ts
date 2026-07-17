@@ -47,21 +47,31 @@ export async function listRecipes(query?: string): Promise<RecipeListItem[]> {
   const supabase = await createClient();
   // recipe_favorites / recipe_cooks are RLS-scoped to the current user, so the
   // embedded rows come back already filtered to this user.
-  let q = supabase
+  const { data, error } = await supabase
     .from("recipes")
     .select(
       "id, title, description, image_url, source_platform, source_author, is_original, normalized, servings, ingredients(name, quantity, unit, position), steps(text, position), recipe_tags(tags(name)), recipe_favorites(created_at), recipe_cooks(cooked_at)",
     )
     .order("created_at", { ascending: false });
-
-  if (query && query.trim()) {
-    q = q.ilike("title", `%${query.trim()}%`);
-  }
-
-  const { data, error } = await q;
   if (error) throw error;
 
-  return (data ?? []).map((r) => {
+  // Search covers what the field promises — title, ingredients and source/
+  // account — not just the title. A leading "@" (an account handle) is ignored.
+  const needle = query?.trim().toLowerCase().replace(/^@/, "") ?? "";
+
+  return (data ?? [])
+    .filter((r) => {
+      if (!needle) return true;
+      const ings = ((r.ingredients ?? []) as unknown as RawIngredient[]).map((i) => i.name).join(" ");
+      const tags = ((r.recipe_tags ?? []) as unknown as { tags: { name: string } | null }[])
+        .map((rt) => rt.tags?.name ?? "")
+        .join(" ");
+      const hay = [r.title, r.description ?? "", r.source_author ?? "", r.source_platform, ings, tags]
+        .join(" ")
+        .toLowerCase();
+      return hay.includes(needle);
+    })
+    .map((r) => {
     const ingredients = [...((r.ingredients ?? []) as unknown as RawIngredient[])].sort(
       (a, b) => a.position - b.position,
     );
