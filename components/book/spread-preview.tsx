@@ -47,74 +47,77 @@ function RecipePageInner({ page }: { page: Extract<PageModel, { kind: "recipe" }
       ? `Etter ${attribution.author ?? attribution.platform}`
       : null;
 
+  // Cinematic full-bleed hero: photo + gradient scrim + white text at the foot.
+  if (isFull) {
+    return (
+      <div className="relative h-full">
+        <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${recipe.image_url})` }} />
+        <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(20,20,19,0) 40%, rgba(20,20,19,0.78) 100%)" }} />
+        <div className="absolute inset-x-0 bottom-0 flex flex-col p-[9%]">
+          <span style={sans} className="text-[clamp(4.5px,1.1cqw,8px)] font-medium uppercase tracking-[0.24em] text-white/85">Oppskrift</span>
+          <h3 style={book} className="mt-[2%] text-[clamp(15px,3.8cqw,34px)] font-light leading-tight text-white">{recipe.title}</h3>
+          <span style={sans} className="mt-[2.5%] text-[clamp(4px,0.95cqw,7.5px)] font-medium uppercase tracking-[0.14em] text-white/85">
+            {metaLine(recipe.servings, recipe.prep_min, recipe.cook_min)}
+          </span>
+          {credit && <span style={book} className="mt-[1%] text-[clamp(4.5px,1.1cqw,8px)] text-white/80">{credit}</span>}
+        </div>
+        <Folio n={page.folio} dark />
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-full flex-col p-[7%]">
-      {isFull ? (
-        <div
-          className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url(${recipe.image_url})` }}
-        />
-      ) : null}
-
-      <div className={isFull ? "relative z-10 mt-auto bg-white/85 p-[5%]" : ""}>
+      <div>
         <h3 style={book} className="text-[clamp(14px,3.4cqw,26px)] font-normal leading-tight text-ink">
           {recipe.title}
         </h3>
-        {recipe.description && !isFull && (
+        {recipe.description && (
           <p style={book} className="mt-1 text-[clamp(7px,1.7cqw,11px)] leading-snug text-stone">
             {recipe.description}
           </p>
         )}
-        {!isFull && (
-          <p style={sans} className="mt-[3%] text-[clamp(4.5px,1.05cqw,7.5px)] font-medium uppercase tracking-[0.12em] text-gran">
-            {metaLine(recipe.servings, recipe.prep_min, recipe.cook_min)}
-          </p>
-        )}
-        {isFull && credit && (
-          <p style={book} className="mt-1 text-[clamp(5px,1.2cqw,8px)] text-stone">{credit}</p>
-        )}
+        <p style={sans} className="mt-[3%] text-[clamp(4.5px,1.05cqw,7.5px)] font-medium uppercase tracking-[0.12em] text-gran">
+          {metaLine(recipe.servings, recipe.prep_min, recipe.cook_min)}
+        </p>
       </div>
 
-      {!isFull && (
-        <>
-          <div className="mt-[4%] border-t border-line" />
-          <div className="mt-[5%] grid flex-1 grid-cols-[35%_1fr] gap-[7%] overflow-hidden">
-            <div>
-              {showPhoto && (
-                <div
-                  className="mb-[10%] aspect-square w-full bg-cover bg-center"
-                  style={{ backgroundImage: `url(${recipe.image_url})` }}
-                />
-              )}
-              <p style={sans} className={`mb-[8%] ${LABEL}`}>Ingredienser</p>
-              <ul className="flex flex-col gap-[4%]">
-                {recipe.ingredients.slice(0, 14).map((ing) => (
-                  <li key={ing.id} style={book} className="text-[clamp(6px,1.5cqw,9px)] leading-snug text-ink">
-                    {ingredientLine(ing.quantity, ing.unit, ing.name, ing.note)}
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div>
-              <p style={sans} className={`mb-[8%] ${LABEL}`}>Fremgangsmåte</p>
-              <ol className="flex flex-col gap-[4%]">
-                {recipe.steps.slice(0, 8).map((s, i) => (
-                  <li key={s.id} style={book} className="flex gap-[4%] text-[clamp(6px,1.5cqw,9px)] leading-snug text-ink">
-                    <span style={sans} className="shrink-0 text-gran">{i + 1}</span>
-                    <span>{s.text}</span>
-                  </li>
-                ))}
-              </ol>
-            </div>
-          </div>
-        </>
-      )}
+      <div className="mt-[4%] border-t border-line" />
+      <div className="mt-[5%] grid flex-1 grid-cols-[35%_1fr] gap-[7%] overflow-hidden">
+        <div>
+          {showPhoto && (
+            <div
+              className="mb-[10%] aspect-square w-full bg-cover bg-center"
+              style={{ backgroundImage: `url(${recipe.image_url})` }}
+            />
+          )}
+          <p style={sans} className={`mb-[8%] ${LABEL}`}>Ingredienser</p>
+          <ul className="flex flex-col gap-[4%]">
+            {recipe.ingredients.slice(0, 14).map((ing) => (
+              <li key={ing.id} style={book} className="text-[clamp(6px,1.5cqw,9px)] leading-snug text-ink">
+                {ingredientLine(ing.quantity, ing.unit, ing.name, ing.note)}
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div>
+          <p style={sans} className={`mb-[8%] ${LABEL}`}>Fremgangsmåte</p>
+          <ol className="flex flex-col gap-[4%]">
+            {recipe.steps.slice(0, 8).map((s, i) => (
+              <li key={s.id} style={book} className="flex gap-[4%] text-[clamp(6px,1.5cqw,9px)] leading-snug text-ink">
+                <span style={sans} className="shrink-0 text-gran">{i + 1}</span>
+                <span>{s.text}</span>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </div>
 
-      {!isFull && credit && (
+      {credit && (
         <p style={book} className="mt-[3%] text-[clamp(5px,1.2cqw,8px)] text-stone">{credit}</p>
       )}
 
-      <Folio n={page.folio} dark={isFull} />
+      <Folio n={page.folio} />
     </div>
   );
 }
@@ -123,30 +126,53 @@ export function PageInner({ page }: { page: PageModel }) {
   switch (page.kind) {
     case "cover":
       return (
-        <div className="flex h-full flex-col justify-center bg-[#E3EAE4] p-[8%] text-center">
-          <p className="text-[clamp(6px,1.5cqw,10px)] uppercase tracking-[0.22em] text-gran">Arv</p>
-          <h2 style={book} className="mt-auto text-[clamp(18px,5cqw,40px)] font-light leading-tight text-ink">
-            {page.title}
-          </h2>
-          {page.subtitle && (
-            <p style={book} className="mt-2 text-[clamp(8px,2cqw,14px)] text-gran">{page.subtitle}</p>
-          )}
-          <div className="mt-auto flex flex-col items-center gap-[3%]">
-            {page.authorAvatar && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={page.authorAvatar}
-                alt=""
-                className="h-[16%] max-h-16 w-auto max-w-[24%] object-cover"
-                style={{ aspectRatio: "1 / 1" }}
-                decoding="async"
-              />
+        <div className="relative h-full bg-[#E3EAE4]">
+          <div className="absolute inset-[6%] border" style={{ borderColor: "#AEC0B2" }} />
+          <div className="relative flex h-full flex-col items-center justify-between p-[14%] text-center">
+            <p style={sans} className="text-[clamp(6px,1.5cqw,11px)] font-medium uppercase tracking-[0.5em] text-gran">Arv</p>
+            <div className="flex flex-col items-center">
+              <h2 style={book} className="text-[clamp(18px,5cqw,44px)] font-light leading-tight tracking-[-0.01em] text-ink">
+                {page.title}
+              </h2>
+              <div className="my-[5%] w-[42px] border-t border-gran" />
+              {page.subtitle && (
+                <p style={book} className="text-[clamp(8px,2cqw,14px)] text-gran">{page.subtitle}</p>
+              )}
+            </div>
+            <div className="flex flex-col items-center gap-[4%]">
+              <div className="w-[18px] border-t border-gran" />
+              {page.author && (
+                <p style={sans} className="text-[clamp(5px,1.2cqw,8.5px)] uppercase tracking-[0.2em] text-stone">
+                  Samlet av {page.author}
+                </p>
+              )}
+              <p style={sans} className="text-[clamp(4px,1cqw,7px)] uppercase tracking-[0.2em] text-stone">
+                Innbundet i lin · Trykket i Norge
+              </p>
+            </div>
+          </div>
+        </div>
+      );
+    case "title":
+      return (
+        <div className="flex h-full flex-col items-center justify-between bg-white p-[14%] text-center">
+          <p style={sans} className="text-[clamp(6px,1.4cqw,9px)] font-medium uppercase tracking-[0.4em] text-gran">Arv</p>
+          <div className="flex flex-col items-center">
+            <h2 style={book} className="text-[clamp(16px,4.6cqw,40px)] font-light leading-tight tracking-[-0.01em] text-ink">
+              {page.title}
+            </h2>
+            <div className="my-[5%] w-[42px] border-t border-gran" />
+            {page.subtitle && (
+              <p style={book} className="text-[clamp(7px,1.9cqw,13px)] text-gran">{page.subtitle}</p>
             )}
+          </div>
+          <div className="flex flex-col items-center gap-[3%]">
             {page.author && (
-              <p className="text-[clamp(6px,1.4cqw,10px)] font-light text-stone">
+              <p style={sans} className="text-[clamp(5px,1.2cqw,8.5px)] uppercase tracking-[0.2em] text-stone">
                 Samlet av {page.author}
               </p>
             )}
+            <p style={book} className="text-[clamp(5px,1.3cqw,10px)] text-stone">arv.kitchen</p>
           </div>
         </div>
       );
@@ -185,13 +211,17 @@ export function PageInner({ page }: { page: PageModel }) {
       );
     case "chapter_opener":
       return (
-        <div className="flex h-full flex-col justify-center p-[10%]">
-          <p style={sans} className="text-[clamp(6px,1.4cqw,10px)] font-medium uppercase tracking-[0.22em] text-gran">
-            Kapittel {page.index}
-          </p>
-          <h2 style={book} className="mt-2 text-[clamp(16px,4cqw,32px)] font-light text-ink">{page.title}</h2>
+        <div className="flex h-full flex-col items-center justify-center p-[10%] text-center">
+          <span style={book} className="text-[clamp(40px,15cqw,84px)] font-light leading-none tracking-[-0.02em] text-gran">
+            {page.index}
+          </span>
+          <span style={sans} className="mt-[2%] text-[clamp(5px,1.3cqw,8px)] font-medium uppercase tracking-[0.28em] text-stone">
+            Kapittel
+          </span>
+          <div className="my-[5%] w-[42px] border-t border-gran" />
+          <h2 style={book} className="text-[clamp(16px,4cqw,34px)] font-light tracking-[-0.01em] text-ink">{page.title}</h2>
           {page.introText && (
-            <p style={book} className="mt-3 max-w-[80%] text-[clamp(7px,1.7cqw,12px)] leading-relaxed text-stone">
+            <p style={book} className="mt-[4%] max-w-[70%] text-[clamp(7px,1.7cqw,12px)] leading-relaxed text-stone">
               {page.introText}
             </p>
           )}
@@ -217,6 +247,7 @@ export function PageInner({ page }: { page: PageModel }) {
     case "colophon":
       return (
         <div className="flex h-full flex-col items-center justify-end gap-[4%] p-[10%] text-center">
+          <p style={sans} className="mb-[4%] text-[clamp(6px,1.4cqw,10px)] font-medium uppercase tracking-[0.4em] text-gran">Arv</p>
           {(page.author || page.contributors.length > 0) && (
             <p style={book} className="text-[clamp(7px,1.7cqw,12px)] font-light leading-relaxed text-gran">
               {creditLine(page.author, page.contributors)}

@@ -20,6 +20,7 @@ export const TEMPLATE_LABEL: Record<PageTemplate, string> = {
 
 export const PAGE_KIND_LABEL: Record<PageModel["kind"], string> = {
   cover: "Omslag",
+  title: "Tittelblad",
   dedication: "Dedikasjon",
   toc: "Innhold",
   chapter_opener: "Kapittelåpning",

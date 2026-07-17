@@ -22,6 +22,7 @@ export interface IndexEntry {
 
 type PageBody =
   | { kind: "cover"; title: string; subtitle: string | null; author: string | null; authorAvatar: string | null; coverImage: string | null }
+  | { kind: "title"; title: string; subtitle: string | null; author: string | null }
   | { kind: "dedication"; text: string }
   | { kind: "toc"; entries: TocEntry[] }
   | { kind: "chapter_opener"; index: number; title: string; introText: string | null }
@@ -60,6 +61,14 @@ export function buildBookPages(
     author: authorName,
     authorAvatar,
     coverImage: book.cover_image,
+  });
+
+  // Interior title page — the quiet, formal restatement inside the linen cover.
+  pages.push({
+    kind: "title",
+    title: book.title,
+    subtitle: book.subtitle,
+    author: authorName,
   });
 
   if (book.dedication?.trim()) {

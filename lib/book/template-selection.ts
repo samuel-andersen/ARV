@@ -71,7 +71,11 @@ export function validTemplatesFor(signals: TemplateSignals): PageTemplate[] {
   if (signals.hasImage && imageIsSlotGrade(signals.image)) {
     options.unshift("photo_and_recipe");
   }
-  if (signals.hasImage && imageIsHeroGrade(signals.image)) {
+  // Auto-selection only reaches for a hero on a proven-large image, but the user
+  // may deliberately choose a full-bleed spread for any photo they trust (the
+  // cinematic layout is a signature "wow" — worth letting people opt in).
+  const unknownResolution = !!signals.image && signals.image.longestEdgePx == null;
+  if (signals.hasImage && !signals.image?.hasTextOverlay && (imageIsHeroGrade(signals.image) || unknownResolution)) {
     options.unshift("full_bleed_photo");
   }
   return options;

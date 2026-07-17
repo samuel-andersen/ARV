@@ -72,6 +72,7 @@ const suppe = recipe({
   servings: 4,
   prep_min: 20,
   cook_min: 30,
+  image_url: PHOTO,
   is_original: false,
   source_platform: "youtube",
   source_author: "Bestemor",
@@ -101,7 +102,7 @@ const book: BookWithContent = {
   updated_at: "2026-01-01T00:00:00Z",
   chapters: [
     { id: "c1", book_id: "b1", position: 0, title: "Bakst", intro_text: "Det som fyller huset med duft.", intro_image: null, recipes: [{ recipe: buns, position: 0, template_override: null }] },
-    { id: "c2", book_id: "b1", position: 1, title: "Til bords", intro_text: null, intro_image: null, recipes: [{ recipe: suppe, position: 0, template_override: null }] },
+    { id: "c2", book_id: "b1", position: 1, title: "Til bords", intro_text: null, intro_image: null, recipes: [{ recipe: suppe, position: 0, template_override: "full_bleed_photo" }] },
   ],
 };
 
