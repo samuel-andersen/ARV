@@ -99,7 +99,7 @@ export async function runImport(input: RunImportInput): Promise<ImportDraft> {
 
   return {
     isRecipe: normalized.is_recipe,
-    title: normalized.title?.trim() || title?.trim() || "Untitled recipe",
+    title: normalized.title?.trim() || title?.trim() || "Oppskrift uten tittel",
     description: normalized.description,
     servings: normalized.servings ?? 4,
     servingsDetected,

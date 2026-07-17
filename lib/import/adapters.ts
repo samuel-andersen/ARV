@@ -188,7 +188,7 @@ async function fetchGenericWeb(url: string): Promise<FetchedSource> {
       reachedCaption: true,
       layersUsed: ["fetch", "caption"],
       fallbackMessage:
-        "No structured recipe found on the page — extracted from the text. Check quantities.",
+        "Fant ingen strukturert oppskrift på siden — hentet ut fra teksten. Sjekk mengdene.",
     };
   } catch {
     return {
@@ -202,15 +202,81 @@ async function fetchGenericWeb(url: string): Promise<FetchedSource> {
       reachedCaption: false,
       layersUsed: ["fetch"],
       fallbackMessage:
-        "Couldn't reach that page. Paste the recipe text or upload screenshots instead.",
+        "Kunne ikke nå siden. Lim inn oppskriftsteksten, eller last opp skjermbilder.",
     };
   }
 }
 
+/** Video id from any YouTube URL form (youtu.be, watch?v=, shorts, embed). */
+function youtubeVideoId(url: string): string | null {
+  try {
+    const u = new URL(url);
+    if (u.hostname.includes("youtu.be")) return u.pathname.slice(1).split("/")[0] || null;
+    if (u.pathname.startsWith("/shorts/")) return u.pathname.split("/")[2] || null;
+    if (u.pathname.startsWith("/embed/")) return u.pathname.split("/")[2] || null;
+    return u.searchParams.get("v");
+  } catch {
+    return null;
+  }
+}
+
+function decodeEntities(s: string): string {
+  return s
+    .replace(/&amp;/g, "&")
+    .replace(/&#39;/g, "'")
+    .replace(/&#34;|&quot;/g, '"')
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(Number(n)));
+}
+
+/** The full video description (where cooking channels put the recipe). */
+function extractDescription(html: string): string | null {
+  const m = html.match(/"shortDescription":"((?:\\.|[^"\\])*)"/);
+  if (!m) return null;
+  try {
+    return JSON.parse(`"${m[1]}"`);
+  } catch {
+    return null;
+  }
+}
+
+/** The spoken transcript, via the first caption track's timedtext feed. */
+async function fetchTranscript(html: string): Promise<string | null> {
+  const m = html.match(/"captionTracks":\[\{"baseUrl":"(.*?)"/);
+  if (!m) return null;
+  let baseUrl: string;
+  try {
+    baseUrl = JSON.parse(`"${m[1]}"`);
+  } catch {
+    return null;
+  }
+  try {
+    const xml = await withRetry(
+      async (signal) => {
+        const res = await fetch(baseUrl, { signal });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.text();
+      },
+      { attempts: 2, timeoutMs: 10000 },
+    );
+    const lines = [...xml.matchAll(/<text[^>]*>([\s\S]*?)<\/text>/g)].map((t) =>
+      decodeEntities(t[1].replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim()),
+    );
+    const text = lines.filter(Boolean).join(" ").slice(0, 14000);
+    return text || null;
+  } catch {
+    return null;
+  }
+}
+
 async function fetchYouTube(url: string): Promise<FetchedSource> {
-  // Full video analysis (frames + Whisper) is behind the See/Listen seams and
-  // not wired yet — for now we reach title/author via oEmbed and degrade
-  // honestly if that's all we get.
+  // oEmbed gives a reliable title/author/thumbnail; the watch page gives the
+  // description (usually the full recipe) and, when present, the caption
+  // transcript. Each layer degrades independently — never hard-fail.
+  let title: string | null = null;
+  let author: string | null = null;
+  let thumbnail: string | null = null;
   try {
     const oembed = await withRetry(
       async (signal) => {
@@ -221,37 +287,68 @@ async function fetchYouTube(url: string): Promise<FetchedSource> {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json() as Promise<{ title?: string; author_name?: string; thumbnail_url?: string }>;
       },
-      { attempts: 3, timeoutMs: 10000 },
+      { attempts: 2, timeoutMs: 10000 },
     );
-
-    return {
-      platform: "youtube",
-      canonicalUrl: url,
-      title: oembed.title ?? null,
-      author: oembed.author_name ?? null,
-      text: oembed.title ?? "",
-      imageUrls: oembed.thumbnail_url ? [oembed.thumbnail_url] : [],
-      reachedVideo: false,
-      reachedCaption: false,
-      layersUsed: ["fetch"],
-      fallbackMessage:
-        "Reached the video's title but not its audio yet — paste the recipe text or upload screenshots to fill in the details.",
-    };
+    title = oembed.title ?? null;
+    author = oembed.author_name ?? null;
+    thumbnail = oembed.thumbnail_url ?? null;
   } catch {
-    return {
-      platform: "youtube",
-      canonicalUrl: url,
-      title: null,
-      author: null,
-      text: "",
-      imageUrls: [],
-      reachedVideo: false,
-      reachedCaption: false,
-      layersUsed: ["fetch"],
-      fallbackMessage:
-        "Couldn't reach the video. Paste the recipe text or upload screenshots instead.",
-    };
+    /* degrade — the watch page below may still carry the title */
   }
+
+  const id = youtubeVideoId(url);
+  let description: string | null = null;
+  let transcript: string | null = null;
+  if (id) {
+    try {
+      const html = await withRetry(
+        async (signal) => {
+          const res = await fetch(`https://www.youtube.com/watch?v=${id}&hl=en`, {
+            signal,
+            headers: {
+              "user-agent":
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36",
+              "accept-language": "en-US,en;q=0.9",
+              cookie: "CONSENT=YES+1",
+            },
+          });
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          return res.text();
+        },
+        { attempts: 2, timeoutMs: 14000 },
+      );
+      description = extractDescription(html);
+      transcript = await fetchTranscript(html);
+      if (!title) title = metaContent(html, "og:title");
+      if (!thumbnail) thumbnail = metaContent(html, "og:image");
+    } catch {
+      /* watch page unreachable — fall through to title-only */
+    }
+  }
+
+  const reachedCaption = !!(description || transcript);
+  const text = [
+    title ?? "",
+    description ? `Beskrivelse:\n${description}` : "",
+    transcript ? `Transkripsjon fra videoen:\n${transcript}` : "",
+  ]
+    .filter(Boolean)
+    .join("\n\n");
+
+  return {
+    platform: "youtube",
+    canonicalUrl: url,
+    title,
+    author,
+    text: text || title || "",
+    imageUrls: thumbnail ? [thumbnail] : [],
+    reachedVideo: !!transcript,
+    reachedCaption,
+    layersUsed: reachedCaption ? ["fetch", "caption"] : ["fetch"],
+    fallbackMessage: reachedCaption
+      ? null
+      : "Fant videoens tittel, men ikke oppskriftsteksten. Lim inn oppskriften fra videobeskrivelsen, eller last opp skjermbilder.",
+  };
 }
 
 async function fetchSocial(url: string, platform: SourcePlatform): Promise<FetchedSource> {
@@ -271,8 +368,8 @@ async function fetchSocial(url: string, platform: SourcePlatform): Promise<Fetch
     reachedCaption: reached,
     layersUsed: reached ? ["fetch", "caption"] : ["fetch"],
     fallbackMessage: reached
-      ? "Couldn't reach the video — extracted from the caption. Check quantities."
-      : `Couldn't reach that ${platform} post yet (they're fragile). Paste the recipe text or upload screenshots instead.`,
+      ? "Kunne ikke nå videoen — hentet ut fra bildeteksten. Sjekk mengdene."
+      : `Kunne ikke nå dette ${platform}-innlegget ennå (de er skjøre). Lim inn oppskriftsteksten, eller last opp skjermbilder.`,
   };
 }
 
