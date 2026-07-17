@@ -7,7 +7,8 @@ import { Input, Textarea } from "@/components/ui/input";
 import { Eyebrow } from "@/components/ui/label";
 import { SpreadPreview } from "@/components/book/spread-preview";
 import { BookReader } from "@/components/book/book-reader";
-import type { BookWithContent, Contributor } from "@/lib/data/books";
+import { BookFamily } from "@/components/book/book-family";
+import type { BookWithContent, FamilyMember } from "@/lib/data/books";
 import type { RecipeListItem } from "@/lib/data/recipes";
 import type { PageModel } from "@/lib/book/layout";
 import { deriveSignals, validTemplatesFor } from "@/lib/book/template-selection";
@@ -17,9 +18,7 @@ import {
   addChapter,
   addRecipeToChapter,
   deleteChapter,
-  inviteContributor,
   moveRecipe,
-  removeContributor,
   removeRecipeFromChapter,
   setTemplateOverride,
   updateBook,
@@ -33,7 +32,8 @@ export function BookBuilder({
   pageCount,
   isOwner,
   currentUserId,
-  contributors,
+  family,
+  ownerName,
 }: {
   book: BookWithContent;
   availableRecipes: RecipeListItem[];
@@ -41,7 +41,8 @@ export function BookBuilder({
   pageCount: number;
   isOwner: boolean;
   currentUserId: string | null;
-  contributors: Contributor[];
+  family: FamilyMember[];
+  ownerName: string | null;
 }) {
   const [pending, startTransition] = useTransition();
   const [showPreview, setShowPreview] = useState(true);
@@ -109,6 +110,9 @@ export function BookBuilder({
             : `Anslått ${pageCount} sider · format ${book.trim_size} cm · mål 300 DPI`}
       </div>
 
+      {/* Familien rundt boken — prominent, visible to every member. */}
+      <BookFamily bookId={book.id} family={family} isOwner={isOwner} ownerName={ownerName} />
+
       <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_1.1fr]">
         {/* Left: structure editor */}
         <div className="flex flex-col gap-8">
@@ -152,11 +156,6 @@ export function BookBuilder({
               </div>
             </div>
           </section>
-          )}
-
-          {/* Contributors — owner only (sharing v1) */}
-          {isOwner && (
-            <ContributorsPanel bookId={book.id} contributors={contributors} disabled={pending} run={run} />
           )}
 
           {/* Chapters */}
@@ -305,84 +304,6 @@ export function BookBuilder({
         )}
       </div>
     </div>
-  );
-}
-
-function ContributorsPanel({
-  bookId,
-  contributors,
-}: {
-  bookId: string;
-  contributors: Contributor[];
-  disabled: boolean;
-  run: (fn: () => Promise<unknown>) => void;
-}) {
-  const [email, setEmail] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [pending, startTransition] = useTransition();
-
-  function invite() {
-    setError(null);
-    const value = email.trim();
-    if (!value) return;
-    startTransition(async () => {
-      const res = await inviteContributor(bookId, value);
-      if (res?.error) setError(res.error);
-      else setEmail("");
-    });
-  }
-
-  return (
-    <section className="border border-line p-5">
-      <Eyebrow>Bidragsytere</Eyebrow>
-      <p className="mt-2 text-sm font-light text-stone">
-        Inviter familie eller venner på e-post. De legger til sine egne oppskrifter — med
-        historie og signatur — i denne delte boken.
-      </p>
-
-      {contributors.length > 0 && (
-        <ul className="mt-4 flex flex-col">
-          {contributors.map((c) => (
-            <li
-              key={c.invited_email ?? c.user_id}
-              className="flex items-center justify-between border-b border-line py-2.5"
-            >
-              <span className="font-light text-ink">
-                {c.display_name ?? c.invited_email}
-                <span className="ml-2 text-[11px] uppercase tracking-[0.22em] text-stone">
-                  {c.accepted_at ? "med" : "invitert"}
-                </span>
-              </span>
-              {c.invited_email && (
-                <button
-                  type="button"
-                  onClick={() =>
-                    startTransition(() => void removeContributor(bookId, c.invited_email!))
-                  }
-                  className="px-1 text-stone hover:text-negative"
-                  aria-label="Fjern bidragsyter"
-                >
-                  ×
-                </button>
-              )}
-            </li>
-          ))}
-        </ul>
-      )}
-
-      <div className="mt-4 flex items-center gap-3">
-        <Input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="venn@eksempel.no"
-        />
-        <Button variant="secondary" disabled={pending || !email.trim()} onClick={invite}>
-          Inviter
-        </Button>
-      </div>
-      {error && <p className="mt-2 text-sm font-light text-negative">{error}</p>}
-    </section>
   );
 }
 

@@ -8,6 +8,7 @@ import {
   StyleSheet,
 } from "@react-pdf/renderer";
 import type { PageModel } from "@/lib/book/layout";
+import { creditLine } from "@/lib/book/labels";
 import { color } from "@/lib/design/tokens";
 
 // 20×25 cm in PDF points (1 cm = 28.3465 pt).
@@ -74,6 +75,7 @@ const s = StyleSheet.create({
   indexCols: { flexDirection: "row", flexWrap: "wrap", marginTop: 20 },
   indexItem: { fontFamily: "Fraunces", fontWeight: 400, fontSize: 9, width: "50%", marginBottom: 4, color: color.ink },
   colophon: { flexDirection: "column", justifyContent: "flex-end", alignItems: "center", height: "100%" },
+  colophonCredit: { fontFamily: "Fraunces", fontWeight: 300, fontSize: 11, color: color.gran, textAlign: "center", marginBottom: 14 },
   colophonText: { fontFamily: "Inter", fontWeight: 500, fontSize: 8, letterSpacing: 2, textTransform: "uppercase", color: color.stone },
 });
 
@@ -212,14 +214,17 @@ function standardPage(page: PageModel, key: number) {
           </View>
         </Page>
       );
-    case "colophon":
+    case "colophon": {
+      const credit = creditLine(page.author, page.contributors);
       return (
         <Page key={key} size={PAGE} style={s.page}>
           <View style={s.colophon}>
+            {credit ? <Text style={s.colophonCredit}>{credit}</Text> : null}
             <Text style={s.colophonText}>Samlet med Arv · arv.kitchen</Text>
           </View>
         </Page>
       );
+    }
     default:
       return null;
   }

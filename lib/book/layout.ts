@@ -22,7 +22,7 @@ export type PageModel =
       attribution: { author: string | null; url: string | null; platform: string } | null;
     }
   | { kind: "index"; entries: string[] }
-  | { kind: "colophon" };
+  | { kind: "colophon"; author: string | null; contributors: string[] };
 
 /** Resolve the effective template for a placed recipe (auto-select + override). */
 export function templateForPlacement(
@@ -36,6 +36,7 @@ export function buildBookPages(
   book: BookWithContent,
   authorName: string | null,
   authorAvatar: string | null = null,
+  contributorNames: string[] = [],
 ): PageModel[] {
   const pages: PageModel[] = [];
 
@@ -100,7 +101,7 @@ export function buildBookPages(
     });
   }
 
-  pages.push({ kind: "colophon" });
+  pages.push({ kind: "colophon", author: authorName, contributors: contributorNames });
 
   return pages;
 }

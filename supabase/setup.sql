@@ -347,6 +347,37 @@ create policy profiles_select_own on profiles
 create policy profiles_update_own on profiles
   for update using (id = auth.uid()) with check (id = auth.uid());
 
+-- Book members can see each other's name and photo (the family dimension).
+create or replace function shares_book_with(other uuid)
+returns boolean
+language sql
+security definer
+stable
+set search_path = ''
+as $$
+  select exists (
+    select 1
+    from public.books b
+    where (
+        b.owner_id = auth.uid()
+        or exists (
+          select 1 from public.book_contributors c
+          where c.book_id = b.id and c.user_id = auth.uid() and c.accepted_at is not null
+        )
+      )
+      and (
+        b.owner_id = other
+        or exists (
+          select 1 from public.book_contributors c2
+          where c2.book_id = b.id and c2.user_id = other and c2.accepted_at is not null
+        )
+      )
+  );
+$$;
+
+create policy profiles_read_book_members on profiles
+  for select using (shares_book_with(id));
+
 -- ---------------------------------------------------------------------------
 -- recipes  (owner full access; public read; book members read)
 -- ---------------------------------------------------------------------------

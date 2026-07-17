@@ -1,5 +1,5 @@
 import type { PageModel } from "@/lib/book/layout";
-import { pageCaption } from "@/lib/book/labels";
+import { pageCaption, creditLine } from "@/lib/book/labels";
 
 /**
  * Page-accurate preview of the Editorial style. Paper-white pages on the Mist
@@ -164,7 +164,12 @@ export function PageInner({ page }: { page: PageModel }) {
       );
     case "colophon":
       return (
-        <div className="flex h-full items-end justify-center p-[10%]">
+        <div className="flex h-full flex-col items-center justify-end gap-[4%] p-[10%] text-center">
+          {(page.author || page.contributors.length > 0) && (
+            <p style={book} className="text-[clamp(7px,1.7cqw,12px)] font-light leading-relaxed text-gran">
+              {creditLine(page.author, page.contributors)}
+            </p>
+          )}
           <p className="text-[clamp(5px,1.2cqw,9px)] uppercase tracking-[0.22em] text-stone">
             Samlet med Arv · arv.kitchen
           </p>

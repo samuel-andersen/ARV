@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getBookWithContent, getLatestOrder } from "@/lib/data/books";
+import { getBookWithContent, getLatestOrder, getBookFamily } from "@/lib/data/books";
 import { getCurrentUser } from "@/lib/auth/user";
 import { buildBookPages, estimatePageCount } from "@/lib/book/layout";
 import { priceForPages, kr } from "@/lib/book/pricing";
@@ -17,7 +17,14 @@ export default async function BookPrintPage({
   const [book, user] = await Promise.all([getBookWithContent(id), getCurrentUser()]);
   if (!book) notFound();
 
-  const pages = buildBookPages(book, user?.displayName ?? null, user?.avatarUrl ?? null);
+  const family = await getBookFamily(id, book.owner_id);
+  const contributorNames = family.filter((m) => m.accepted && !m.isOwner).map((m) => m.name ?? "");
+  const pages = buildBookPages(
+    book,
+    user?.displayName ?? null,
+    user?.avatarUrl ?? null,
+    contributorNames,
+  );
   const pageCount = estimatePageCount(pages);
   const ordered = book.status === "ordered";
   const order = ordered ? await getLatestOrder(id) : null;

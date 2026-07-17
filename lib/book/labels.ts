@@ -34,3 +34,22 @@ export function pageCaption(page: PageModel): string {
     ? TEMPLATE_LABEL[page.template]
     : PAGE_KIND_LABEL[page.kind];
 }
+
+/** Join names in Norwegian: "Tove", "Tove og Kari", "Tove, Kari og Per". */
+export function joinNames(names: string[]): string {
+  const n = names.filter(Boolean);
+  if (n.length <= 1) return n[0] ?? "";
+  return `${n.slice(0, -1).join(", ")} og ${n[n.length - 1]}`;
+}
+
+/**
+ * The book's authorship line for the colophon: the owner, plus everyone who
+ * contributed — the family dimension made permanent in print.
+ */
+export function creditLine(author: string | null, contributors: string[]): string {
+  const others = joinNames(contributors);
+  if (author && others) return `Samlet av ${author}, med ${others}.`;
+  if (author) return `Samlet av ${author}.`;
+  if (others) return `Samlet av ${others}.`;
+  return "";
+}

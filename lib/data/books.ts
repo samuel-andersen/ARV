@@ -34,6 +34,7 @@ export interface Contributor {
   invited_email: string | null;
   accepted_at: string | null;
   display_name: string | null;
+  avatar_url: string | null;
 }
 
 /** List a book's contributors (owner-visible). */
@@ -41,17 +42,71 @@ export async function getBookContributors(bookId: string): Promise<Contributor[]
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("book_contributors")
-    .select("user_id, role, invited_email, accepted_at, profiles(display_name)")
+    .select("user_id, role, invited_email, accepted_at, profiles(display_name, avatar_url)")
     .eq("book_id", bookId);
   if (error) throw error;
-  return (data ?? []).map((c) => ({
-    user_id: c.user_id,
-    role: c.role,
-    invited_email: c.invited_email,
-    accepted_at: c.accepted_at,
-    display_name:
-      (c.profiles as unknown as { display_name: string | null } | null)?.display_name ?? null,
-  }));
+  return (data ?? []).map((c) => {
+    const p = c.profiles as unknown as { display_name: string | null; avatar_url: string | null } | null;
+    return {
+      user_id: c.user_id,
+      role: c.role,
+      invited_email: c.invited_email,
+      accepted_at: c.accepted_at,
+      display_name: p?.display_name ?? null,
+      avatar_url: p?.avatar_url ?? null,
+    };
+  });
+}
+
+export interface FamilyMember {
+  userId: string | null;
+  name: string | null;
+  email: string | null;
+  avatarUrl: string | null;
+  accepted: boolean;
+  isOwner: boolean;
+}
+
+/**
+ * Everyone gathered around a book: the owner first, then contributors
+ * (accepted, then still-invited). Visible to any book member — used by the
+ * prominent family strip. Names/photos come through the profiles_read_book_
+ * members policy.
+ */
+export async function getBookFamily(
+  bookId: string,
+  ownerId: string,
+): Promise<FamilyMember[]> {
+  const supabase = await createClient();
+
+  const [{ data: owner }, contributors] = await Promise.all([
+    supabase.from("profiles").select("display_name, avatar_url").eq("id", ownerId).maybeSingle(),
+    getBookContributors(bookId),
+  ]);
+
+  const members: FamilyMember[] = [
+    {
+      userId: ownerId,
+      name: (owner as { display_name?: string | null } | null)?.display_name ?? null,
+      email: null,
+      avatarUrl: (owner as { avatar_url?: string | null } | null)?.avatar_url ?? null,
+      accepted: true,
+      isOwner: true,
+    },
+  ];
+
+  const rank = (c: Contributor) => (c.accepted_at ? 0 : 1);
+  for (const c of [...contributors].sort((a, b) => rank(a) - rank(b))) {
+    members.push({
+      userId: c.user_id,
+      name: c.display_name,
+      email: c.invited_email,
+      avatarUrl: c.avatar_url,
+      accepted: !!c.accepted_at,
+      isOwner: false,
+    });
+  }
+  return members;
 }
 
 export interface PendingInvite {

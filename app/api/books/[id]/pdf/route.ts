@@ -1,5 +1,5 @@
 import { renderToBuffer } from "@react-pdf/renderer";
-import { getBookWithContent } from "@/lib/data/books";
+import { getBookWithContent, getBookFamily } from "@/lib/data/books";
 import { getCurrentUser } from "@/lib/auth/user";
 import { buildBookPages } from "@/lib/book/layout";
 import { registerPrintFonts } from "@/lib/pdf/fonts";
@@ -26,7 +26,9 @@ export async function GET(
   }
 
   registerPrintFonts();
-  const pages = buildBookPages(book, user.displayName, user.avatarUrl);
+  const family = await getBookFamily(id, book.owner_id);
+  const contributorNames = family.filter((m) => m.accepted && !m.isOwner).map((m) => m.name ?? "");
+  const pages = buildBookPages(book, user.displayName, user.avatarUrl, contributorNames);
   // react-pdf requires the ROOT element to be a <Document>, so we call the
   // builder to get the element rather than wrapping it in a component.
   const element = BookDocument({ pages }) as Parameters<typeof renderToBuffer>[0];
