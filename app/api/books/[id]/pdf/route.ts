@@ -31,7 +31,7 @@ export async function GET(
   const pages = buildBookPages(book, user.displayName, user.avatarUrl, contributorNames);
   // react-pdf requires the ROOT element to be a <Document>, so we call the
   // builder to get the element rather than wrapping it in a component.
-  const element = BookDocument({ pages }) as Parameters<typeof renderToBuffer>[0];
+  const element = BookDocument({ pages, title: book.title }) as Parameters<typeof renderToBuffer>[0];
   const buffer = await renderToBuffer(element);
 
   const filename = `${book.title.replace(/[^\w\-]+/g, "-").toLowerCase() || "arv-book"}.pdf`;

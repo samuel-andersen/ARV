@@ -53,7 +53,12 @@ export function imageIsHeroGrade(img: ImageQuality | null): boolean {
 /** Whether an image is usable in a smaller (non-hero) photo slot. */
 export function imageIsSlotGrade(img: ImageQuality | null): boolean {
   if (!img || img.hasTextOverlay) return false;
-  return (img.longestEdgePx ?? 0) >= SLOT_MIN_LONGEST_EDGE;
+  // Unknown resolution → trust it for a small slot: uploads are downscale-capped
+  // and warned below 2000px, so a slot-sized photo is safe. (Only a *hero*
+  // full-bleed needs a proven large edge.) Without this the book would never
+  // show a photo on a recipe page, since we don't measure pixels.
+  if (img.longestEdgePx == null) return true;
+  return img.longestEdgePx >= SLOT_MIN_LONGEST_EDGE;
 }
 
 /**

@@ -38,64 +38,79 @@ function recipe(partial: Partial<RecipeWithChildren> & { title: string }): Recip
   } as RecipeWithChildren;
 }
 
+import { join } from "node:path";
+const PHOTO = join(process.cwd(), "public", "brand", "ig-post-ink.png");
+
 const buns = recipe({
-  title: "Grandmother's Cardamom Buns",
-  description: "Soft, sweet buns scented with cardamom.",
-  story: "Mormor baked these every Sunday.",
+  title: "Mormors kardemommeboller",
+  description: "Myke, søte boller med brunet smør og nykvernet kardemomme.",
+  story: "Mormor bakte disse hver søndag.",
   servings: 12,
+  prep_min: 40,
+  cook_min: 12,
+  image_url: PHOTO,
   ingredients: [
-    { id: "1", recipe_id: "r", position: 0, quantity: 500, unit: "g", name: "wheat flour", note: null, needs_review: false },
-    { id: "2", recipe_id: "r", position: 1, quantity: 250, unit: "ml", name: "whole milk", note: "lukewarm", needs_review: false },
-    { id: "3", recipe_id: "r", position: 2, quantity: 2, unit: "tsp", name: "ground cardamom", note: "freshly ground", needs_review: false },
+    { id: "1", recipe_id: "r", position: 0, quantity: 500, unit: "g", name: "hvetemel", note: null, needs_review: false },
+    { id: "2", recipe_id: "r", position: 1, quantity: 2.5, unit: "dl", name: "helmelk", note: "lunken", needs_review: false },
+    { id: "3", recipe_id: "r", position: 2, quantity: 2, unit: "ss", name: "malt kardemomme", note: "nykvernet", needs_review: false },
+    { id: "4", recipe_id: "r", position: 3, quantity: 1.5, unit: "dl", name: "sukker", note: null, needs_review: false },
+    { id: "5", recipe_id: "r", position: 4, quantity: 0.5, unit: "ts", name: "salt", note: null, needs_review: false },
+    { id: "6", recipe_id: "r", position: 5, quantity: 0.25, unit: "l", name: "smør", note: "brunet", needs_review: false },
   ],
   steps: [
-    { id: "s1", recipe_id: "r", position: 0, text: "Warm the milk and dissolve the yeast.", timer_seconds: null },
-    { id: "s2", recipe_id: "r", position: 1, text: "Mix in flour, butter and cardamom; knead until smooth.", timer_seconds: null },
-    { id: "s3", recipe_id: "r", position: 2, text: "Let the dough rise until doubled.", timer_seconds: 3600 },
+    { id: "s1", recipe_id: "r", position: 0, text: "Varm melken til fingervarm og løs opp gjæren i den.", timer_seconds: null },
+    { id: "s2", recipe_id: "r", position: 1, text: "Elt inn mel, brunet smør og kardemomme til deigen er blank og smidig.", timer_seconds: null },
+    { id: "s3", recipe_id: "r", position: 2, text: "La deigen heve til dobbel størrelse, cirka én time et lunt sted.", timer_seconds: 3600 },
+    { id: "s4", recipe_id: "r", position: 3, text: "Trill boller, etterhev, og stek på 220°C til de er gyldne.", timer_seconds: 720 },
   ],
-  tags: ["baking", "family"],
+  tags: ["baking", "familie"],
 });
 
-const shrimp = recipe({
-  title: "Garlic Butter Shrimp",
+const suppe = recipe({
+  title: "Fiskesuppe fra Bergen",
+  description: "En fyldig, kremet suppe med torsk og laks.",
   servings: 4,
+  prep_min: 20,
+  cook_min: 30,
   is_original: false,
-  source_platform: "instagram",
-  source_author: "@reels.eats",
-  source_url: "https://instagram.com/p/demo5",
+  source_platform: "youtube",
+  source_author: "Bestemor",
+  source_url: "https://youtube.com/watch?v=demo",
   ingredients: [
-    { id: "1", recipe_id: "r", position: 0, quantity: 2, unit: "tbsp", name: "butter", note: null, needs_review: false },
-    { id: "2", recipe_id: "r", position: 1, quantity: null, unit: null, name: "shrimp", note: "a big handful", needs_review: true },
+    { id: "1", recipe_id: "r", position: 0, quantity: 400, unit: "g", name: "torsk", note: "i biter", needs_review: false },
+    { id: "2", recipe_id: "r", position: 1, quantity: 3, unit: "dl", name: "fløte", note: null, needs_review: false },
+    { id: "3", recipe_id: "r", position: 2, quantity: 0.5, unit: null, name: "purre", note: "finhakket", needs_review: false },
   ],
   steps: [
-    { id: "s1", recipe_id: "r", position: 0, text: "Melt butter, add garlic, cook 30 seconds, then add shrimp until pink.", timer_seconds: null },
+    { id: "s1", recipe_id: "r", position: 0, text: "Kok kraft av fiskebeina i tjue minutter, og sil den godt.", timer_seconds: 1200 },
+    { id: "s2", recipe_id: "r", position: 1, text: "Tilsett fløte og grønnsaker, la småkoke, og vend inn fisken til slutt.", timer_seconds: null },
   ],
 });
 
 const book: BookWithContent = {
   id: "b1",
   owner_id: "u",
-  title: "Our Kitchen",
-  subtitle: "A first gathering",
+  title: "Vårt familiebord",
+  subtitle: "Oppskrifter vi gir videre",
   style: "editorial",
   trim_size: "20x25",
   status: "draft",
   cover_image: null,
-  dedication: "For everyone who ever cooked at this table.",
+  dedication: "Til alle som noen gang lagde mat ved dette bordet.",
   created_at: "2026-01-01T00:00:00Z",
   updated_at: "2026-01-01T00:00:00Z",
   chapters: [
-    { id: "c1", book_id: "b1", position: 0, title: "Mornings", intro_text: "How the day begins.", intro_image: null, recipes: [{ recipe: buns, position: 0, template_override: null }] },
-    { id: "c2", book_id: "b1", position: 1, title: "Quick", intro_text: null, intro_image: null, recipes: [{ recipe: shrimp, position: 0, template_override: null }] },
+    { id: "c1", book_id: "b1", position: 0, title: "Bakst", intro_text: "Det som fyller huset med duft.", intro_image: null, recipes: [{ recipe: buns, position: 0, template_override: null }] },
+    { id: "c2", book_id: "b1", position: 1, title: "Til bords", intro_text: null, intro_image: null, recipes: [{ recipe: suppe, position: 0, template_override: null }] },
   ],
 };
 
 async function main() {
   registerPrintFonts();
-  const pages = buildBookPages(book, "Demo Cook");
+  const pages = buildBookPages(book, "Familien Andersen", null, ["Tove", "Bestemor"]);
 
   // Root must be a <Document> element, so call the builder to get the element.
-  const element = BookDocument({ pages }) as Parameters<typeof renderToBuffer>[0];
+  const element = BookDocument({ pages, title: book.title }) as Parameters<typeof renderToBuffer>[0];
   const buffer = await renderToBuffer(element);
   const out = "scripts/arv-book-verify.pdf";
   writeFileSync(out, buffer);
