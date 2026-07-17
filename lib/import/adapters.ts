@@ -17,6 +17,8 @@ export interface FetchedSource {
   /** Assembled text handed to the extraction layer. */
   text: string;
   imageUrls: string[];
+  /** Direct video/audio URL for the transcription layer, when reachable. */
+  videoUrl: string | null;
   reachedVideo: boolean;
   reachedCaption: boolean;
   layersUsed: ImportLayer[];
@@ -161,6 +163,7 @@ async function fetchGenericWeb(url: string): Promise<FetchedSource> {
         author: jsonld.author,
         text: jsonld.text,
         imageUrls: jsonld.image ? [jsonld.image] : [],
+        videoUrl: null,
         reachedVideo: false,
         reachedCaption: true,
         layersUsed: ["fetch", "caption"],
@@ -184,6 +187,7 @@ async function fetchGenericWeb(url: string): Promise<FetchedSource> {
       author: null,
       text: [title, description, body].filter(Boolean).join("\n"),
       imageUrls: image ? [image] : [],
+      videoUrl: null,
       reachedVideo: false,
       reachedCaption: true,
       layersUsed: ["fetch", "caption"],
@@ -198,6 +202,7 @@ async function fetchGenericWeb(url: string): Promise<FetchedSource> {
       author: null,
       text: "",
       imageUrls: [],
+      videoUrl: null,
       reachedVideo: false,
       reachedCaption: false,
       layersUsed: ["fetch"],
@@ -342,6 +347,7 @@ async function fetchYouTube(url: string): Promise<FetchedSource> {
     author,
     text: text || title || "",
     imageUrls: thumbnail ? [thumbnail] : [],
+    videoUrl: null,
     reachedVideo: !!transcript,
     reachedCaption,
     layersUsed: reachedCaption ? ["fetch", "caption"] : ["fetch"],
@@ -364,6 +370,7 @@ async function fetchSocial(url: string, platform: SourcePlatform): Promise<Fetch
     author: result.author,
     text: result.caption ?? "",
     imageUrls: result.thumbnailUrl ? [result.thumbnailUrl] : [],
+    videoUrl: result.videoUrl,
     reachedVideo: result.reachedVideo,
     reachedCaption: reached,
     layersUsed: reached ? ["fetch", "caption"] : ["fetch"],

@@ -2,6 +2,7 @@ import "server-only";
 import type { ImportLayer, SourcePlatform } from "@/lib/schemas/common";
 import { getExtractionProvider } from "@/lib/providers/extraction";
 import { getNormalizationProvider } from "@/lib/providers/normalization";
+import { getTranscriptionProvider } from "@/lib/providers/transcription";
 import { fetchSource, platformFromUrl } from "./adapters";
 
 /**
@@ -74,6 +75,19 @@ export async function runImport(input: RunImportInput): Promise<ImportDraft> {
     imageUrls = [...fetched.imageUrls, ...imageUrls];
     layersUsed = [...fetched.layersUsed];
     fallbackMessage = fetched.fallbackMessage;
+
+    // Listen: when a video/audio URL is reachable (e.g. an IG/TikTok clip) and
+    // the transcription provider is configured, add the spoken words to the
+    // material. Best-effort — a failure never blocks the import.
+    if (fetched.videoUrl) {
+      const transcript = await getTranscriptionProvider().transcribe(fetched.videoUrl);
+      if (transcript?.text) {
+        text = [text, `Transkripsjon fra videoen:\n${transcript.text}`].filter(Boolean).join("\n\n");
+        if (!layersUsed.includes("transcript")) layersUsed.push("transcript");
+        // We reached the actual spoken recipe — the caption-only caveat lifts.
+        if (fallbackMessage) fallbackMessage = null;
+      }
+    }
   } else {
     // Pure paste-text / screenshot path — no source to reach.
     platform = "web";
