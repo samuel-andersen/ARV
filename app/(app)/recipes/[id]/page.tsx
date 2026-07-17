@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getRecipe, getRecipeNotes } from "@/lib/data/recipes";
+import { getRecipe, getRecipeNotes, getRecipeEngagement } from "@/lib/data/recipes";
 import { getCurrentUser } from "@/lib/auth/user";
+import { FavoriteButton } from "@/components/recipe/favorite-button";
 import { RecipeBody } from "@/components/recipe/recipe-body";
 import { ShareToggle } from "@/components/recipe/share-toggle";
 import { CookModeLauncher } from "@/components/recipe/cook-mode";
@@ -25,6 +26,20 @@ function totalTime(prep: number | null, cook: number | null): string | null {
   return m ? `${h} t ${m} min` : `${h} t`;
 }
 
+const MONTHS = [
+  "januar", "februar", "mars", "april", "mai", "juni",
+  "juli", "august", "september", "oktober", "november", "desember",
+];
+
+/** "Laget 3 ganger · sist i mars" — the user's own cook history. */
+function cookedSummary(count: number, lastIso: string | null): string | null {
+  if (count <= 0) return null;
+  const times = count === 1 ? "Laget én gang" : `Laget ${count} ganger`;
+  if (!lastIso) return times;
+  const d = new Date(lastIso);
+  return `${times} · sist i ${MONTHS[d.getMonth()]}`;
+}
+
 export default async function RecipePage({
   params,
 }: {
@@ -39,8 +54,10 @@ export default async function RecipePage({
   const ownerId = (recipe as unknown as { owner_id?: string }).owner_id;
   const isOwner = !!user && user.id === ownerId;
   const siteUrl = await getSiteUrl();
+  const engagement = user ? await getRecipeEngagement(id) : { isFavorite: false, cookCount: 0, lastCookedAt: null };
 
   const time = totalTime(recipe.prep_min, recipe.cook_min);
+  const cookedLine = cookedSummary(engagement.cookCount, engagement.lastCookedAt);
   const credit = recipe.is_original
     ? "Din oppskrift"
     : recipe.source_author
@@ -76,14 +93,24 @@ export default async function RecipePage({
 
       <div className="flex flex-col gap-5 px-5 py-6 sm:px-8">
         <div>
-          <h1 className="serif text-[30px] font-normal leading-tight text-ink">
-            {recipe.title}
-          </h1>
+          <div className="flex items-start justify-between gap-3">
+            <h1 className="serif text-[30px] font-normal leading-tight text-ink">
+              {recipe.title}
+            </h1>
+            {user && (
+              <div className="-mr-2 -mt-1 shrink-0">
+                <FavoriteButton recipeId={recipe.id} initial={engagement.isFavorite} />
+              </div>
+            )}
+          </div>
           <p className="mt-2 text-[12.5px] font-light text-stone">
             {credit}
             {` · ${recipe.servings} porsjoner`}
             {time ? ` · ${time}` : ""}
           </p>
+          {cookedLine && (
+            <p className="mt-1 text-[12px] font-light text-gran">{cookedLine}</p>
+          )}
         </div>
 
         {recipe.story && (
@@ -155,6 +182,7 @@ export default async function RecipePage({
               title={recipe.title}
               ingredients={recipe.ingredients}
               steps={recipe.steps}
+              logRecipeId={user ? recipe.id : undefined}
               photo={
                 isOwner
                   ? { recipeId: recipe.id, userId: user!.id, hasImage: !!recipe.image_url }

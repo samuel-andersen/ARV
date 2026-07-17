@@ -1,8 +1,10 @@
 import { listRecipes } from "@/lib/data/recipes";
+import { listBooks } from "@/lib/data/books";
 import { getCurrentUser } from "@/lib/auth/user";
 import { FeaturedCard } from "@/components/recipe/recipe-cards";
 import { LibraryFeed } from "@/components/recipe/library-feed";
 import { FirstRun } from "@/components/recipe/first-run";
+import { MomentumNudge } from "@/components/recipe/momentum-nudge";
 
 /** Time-aware Norwegian greeting. */
 function greeting(): string {
@@ -28,11 +30,17 @@ export default async function LibraryPage({
   searchParams: Promise<{ q?: string }>;
 }) {
   const { q } = await searchParams;
-  const [recipes, user] = await Promise.all([listRecipes(q), getCurrentUser()]);
+  const [recipes, user, books] = await Promise.all([
+    listRecipes(q),
+    getCurrentUser(),
+    listBooks(),
+  ]);
   const name = firstName(user?.displayName ?? null, user?.email ?? null);
 
   const featured = !q ? recipes[0] : undefined;
   const rest = featured ? recipes.slice(1) : recipes;
+
+  const placedCount = books.reduce((sum, b) => sum + b.recipeCount, 0);
 
   return (
     <div>
@@ -97,6 +105,15 @@ export default async function LibraryPage({
         )
       ) : (
         <>
+          {!q && (
+            <MomentumNudge
+              recipeCount={recipes.length}
+              hasBook={books.length > 0}
+              placedCount={placedCount}
+              firstBookId={books[0]?.id ?? null}
+            />
+          )}
+
           {featured && (
             <div className="mt-6">
               <FeaturedCard recipe={featured} />

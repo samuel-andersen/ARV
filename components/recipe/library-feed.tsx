@@ -27,26 +27,56 @@ export function LibraryFeed({ recipes }: { recipes: RecipeListItem[] }) {
       .map(([name]) => name);
   }, [recipes]);
 
-  const [cat, setCat] = useState<string | null>(null);
+  const hasFavorites = useMemo(() => recipes.some((r) => r.isFavorite), [recipes]);
+  const hasCooked = useMemo(() => recipes.some((r) => r.lastCookedAt), [recipes]);
 
-  const shown = cat ? recipes.filter((r) => r.tags.some((t) => t.toLowerCase() === cat)) : recipes;
+  // filter key: "" = all, "fav", "cooked", or "tag:<name>"
+  const [filter, setFilter] = useState("");
 
   const cap = (s: string) => s[0].toUpperCase() + s.slice(1);
 
+  const { shown, heading } = useMemo(() => {
+    if (filter === "fav") {
+      return { shown: recipes.filter((r) => r.isFavorite), heading: "Favoritter" };
+    }
+    if (filter === "cooked") {
+      const cooked = recipes
+        .filter((r) => r.lastCookedAt)
+        .sort((a, b) => (a.lastCookedAt! < b.lastCookedAt! ? 1 : -1));
+      return { shown: cooked, heading: "Laget nylig" };
+    }
+    if (filter.startsWith("tag:")) {
+      const tag = filter.slice(4);
+      return {
+        shown: recipes.filter((r) => r.tags.some((t) => t.toLowerCase() === tag)),
+        heading: cap(tag),
+      };
+    }
+    return { shown: recipes, heading: "Biblioteket" };
+  }, [filter, recipes]);
+
+  const showChips = hasFavorites || hasCooked || categories.length > 0;
+
   return (
     <>
-      {categories.length > 0 && (
+      {showChips && (
         <div className="scroll-y -mx-5 mt-6 flex gap-2 overflow-x-auto px-5 pb-1 sm:mx-0 sm:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          <Chip label="Alle" active={cat === null} onClick={() => setCat(null)} />
+          <Chip label="Alle" active={filter === ""} onClick={() => setFilter("")} />
+          {hasFavorites && (
+            <Chip label="Favoritter" active={filter === "fav"} onClick={() => setFilter("fav")} />
+          )}
+          {hasCooked && (
+            <Chip label="Laget nylig" active={filter === "cooked"} onClick={() => setFilter("cooked")} />
+          )}
           {categories.map((c) => (
-            <Chip key={c} label={cap(c)} active={cat === c} onClick={() => setCat(c)} />
+            <Chip key={c} label={cap(c)} active={filter === `tag:${c}`} onClick={() => setFilter(`tag:${c}`)} />
           ))}
         </div>
       )}
 
       <div className="mt-6 flex items-baseline justify-between">
         <span className="text-[9.5px] font-medium uppercase tracking-[0.22em] text-stone">
-          {cat ? cap(cat) : "Biblioteket"}
+          {heading}
         </span>
         <span className="text-[11.5px] font-light text-stone">
           {shown.length} {shown.length === 1 ? "oppskrift" : "oppskrifter"}

@@ -25,6 +25,12 @@ export interface RecipeListItem {
   previewIngredients: IngredientPreview[];
   /** First method step, for the card back. */
   firstStep: string | null;
+  /** Whether the current user has favorited this recipe. */
+  isFavorite: boolean;
+  /** How many times the current user has cooked it. */
+  cookCount: number;
+  /** ISO timestamp of the most recent cook, or null. */
+  lastCookedAt: string | null;
 }
 
 type RawIngredient = { name: string; quantity: number | null; unit: string | null; position: number };
@@ -39,10 +45,12 @@ function fmtAmount(q: number | null, unit: string | null): string {
 /** List the current user's recipes, newest first, with an optional text query. */
 export async function listRecipes(query?: string): Promise<RecipeListItem[]> {
   const supabase = await createClient();
+  // recipe_favorites / recipe_cooks are RLS-scoped to the current user, so the
+  // embedded rows come back already filtered to this user.
   let q = supabase
     .from("recipes")
     .select(
-      "id, title, description, image_url, source_platform, source_author, is_original, normalized, servings, ingredients(name, quantity, unit, position), steps(text, position), recipe_tags(tags(name))",
+      "id, title, description, image_url, source_platform, source_author, is_original, normalized, servings, ingredients(name, quantity, unit, position), steps(text, position), recipe_tags(tags(name)), recipe_favorites(created_at), recipe_cooks(cooked_at)",
     )
     .order("created_at", { ascending: false });
 
@@ -63,6 +71,11 @@ export async function listRecipes(query?: string): Promise<RecipeListItem[]> {
     const tags = ((r.recipe_tags ?? []) as unknown as { tags: { name: string } | null }[])
       .map((rt) => rt.tags?.name)
       .filter((n): n is string => !!n);
+    const cooks = ((r.recipe_cooks ?? []) as unknown as { cooked_at: string }[]);
+    const lastCookedAt = cooks.reduce<string | null>(
+      (max, c) => (max === null || c.cooked_at > max ? c.cooked_at : max),
+      null,
+    );
     return {
       id: r.id,
       title: r.title,
@@ -80,8 +93,31 @@ export async function listRecipes(query?: string): Promise<RecipeListItem[]> {
         amount: fmtAmount(i.quantity, i.unit),
       })),
       firstStep: steps[0]?.text ?? null,
+      isFavorite: ((r.recipe_favorites ?? []) as unknown as unknown[]).length > 0,
+      cookCount: cooks.length,
+      lastCookedAt,
     };
   });
+}
+
+/** The current user's favorite + cook state for one recipe (detail page). */
+export async function getRecipeEngagement(
+  recipeId: string,
+): Promise<{ isFavorite: boolean; cookCount: number; lastCookedAt: string | null }> {
+  const supabase = await createClient();
+  const [{ data: fav }, { data: cooks }] = await Promise.all([
+    supabase.from("recipe_favorites").select("recipe_id").eq("recipe_id", recipeId).maybeSingle(),
+    supabase
+      .from("recipe_cooks")
+      .select("cooked_at")
+      .eq("recipe_id", recipeId)
+      .order("cooked_at", { ascending: false }),
+  ]);
+  return {
+    isFavorite: !!fav,
+    cookCount: cooks?.length ?? 0,
+    lastCookedAt: cooks?.[0]?.cooked_at ?? null,
+  };
 }
 
 /** A margin note on a recipe. */

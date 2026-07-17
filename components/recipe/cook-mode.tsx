@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { okHaptic, tapHaptic } from "@/lib/haptics";
 import { CookFinishPhoto } from "@/components/recipe/cook-finish-photo";
+import { logCook } from "@/lib/actions/organize";
 import type { Ingredient, Step } from "@/lib/schemas/recipe";
 
 /** Owner-only capture at the end of cooking; absent on public/shared pages. */
@@ -38,11 +39,14 @@ export function CookModeLauncher({
   ingredients,
   steps,
   photo,
+  logRecipeId,
 }: {
   title: string;
   ingredients: Ingredient[];
   steps: Step[];
   photo?: CookPhotoTarget;
+  /** When set, records a cook for this recipe once the flow reaches the end. */
+  logRecipeId?: string;
 }) {
   const [open, setOpen] = useState(false);
 
@@ -63,6 +67,7 @@ export function CookModeLauncher({
           ingredients={ingredients}
           steps={steps}
           photo={photo}
+          logRecipeId={logRecipeId}
           onClose={() => setOpen(false)}
         />
       )}
@@ -75,21 +80,24 @@ function CookMode({
   ingredients,
   steps,
   photo,
+  logRecipeId,
   onClose,
 }: {
   title: string;
   ingredients: Ingredient[];
   steps: Step[];
   photo?: CookPhotoTarget;
+  logRecipeId?: string;
   onClose: () => void;
 }) {
   const router = useRouter();
   const photoSaved = useRef(false);
+  const cookLogged = useRef(false);
 
   // If the cook photographed their result, refresh the recipe page on close so
   // the new cover shows immediately.
   const close = useCallback(() => {
-    if (photoSaved.current) router.refresh();
+    if (photoSaved.current || cookLogged.current) router.refresh();
     onClose();
   }, [onClose, router]);
   const [index, setIndex] = useState(0);
@@ -109,6 +117,14 @@ function CookMode({
   const touchStartX = useRef<number | null>(null);
 
   const atEnd = index >= steps.length;
+
+  // Record the cook exactly once when the flow reaches the end.
+  useEffect(() => {
+    if (atEnd && logRecipeId && !cookLogged.current) {
+      cookLogged.current = true;
+      void logCook(logRecipeId);
+    }
+  }, [atEnd, logRecipeId]);
   const step = atEnd ? null : steps[index];
 
   const next = useCallback(() => {
