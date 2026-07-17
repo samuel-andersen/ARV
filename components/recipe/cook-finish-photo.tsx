@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { uploadRecipeCover } from "@/lib/upload/recipe-photo";
 import { setRecipeImage } from "@/lib/actions/recipes";
+import { PhotoGuide } from "@/components/recipe/photo-guide";
 import { tapHaptic, okHaptic, alertHaptic } from "@/lib/haptics";
 
 /**
@@ -96,6 +97,9 @@ export function CookFinishPhoto({
           </span>
         </span>
       </button>
+      <div className="mt-2.5">
+        <PhotoGuide label="Tips til et bra bilde →" />
+      </div>
       {error && <p className="mt-2 text-[12px] font-light text-negative">{error}</p>}
     </div>
   );
