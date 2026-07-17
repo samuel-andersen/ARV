@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getBookWithContent } from "@/lib/data/books";
+import { getBookWithContent, getLatestOrder } from "@/lib/data/books";
 import { getCurrentUser } from "@/lib/auth/user";
 import { buildBookPages, estimatePageCount } from "@/lib/book/layout";
-import { OrderButton } from "@/components/book/order-button";
+import { priceForPages, kr } from "@/lib/book/pricing";
+import { OrderFlow } from "@/components/book/order-flow";
 
 /* eslint-disable @next/next/no-img-element */
 
@@ -19,6 +20,8 @@ export default async function BookPrintPage({
   const pages = buildBookPages(book, user?.displayName ?? null, user?.avatarUrl ?? null);
   const pageCount = estimatePageCount(pages);
   const ordered = book.status === "ordered";
+  const order = ordered ? await getLatestOrder(id) : null;
+  const unitPrice = priceForPages(pageCount);
   const coverImage =
     book.cover_image ??
     book.chapters.flatMap((c) => c.recipes).find((r) => r.recipe.image_url)?.recipe.image_url ??
@@ -36,7 +39,7 @@ export default async function BookPrintPage({
       </div>
 
       {ordered ? (
-        <OrderConfirmation title={book.title} pageCount={pageCount} />
+        <OrderConfirmation title={book.title} pageCount={pageCount} order={order} />
       ) : (
         <>
           {/* The 3D book object on Salvie. */}
@@ -81,22 +84,31 @@ export default async function BookPrintPage({
               <div className="text-[13px] font-light text-ink">
                 Innbundet i lin · 20 × 25 cm · {pageCount} sider
               </div>
+              <div className="mt-1.5 text-[13px] text-ink">
+                Fra <span className="font-medium">{kr(unitPrice)}</span>
+              </div>
               <div className="serif-italic mt-1.5 text-[12.5px] font-light text-gran">
                 Trykket og sydd i Norge. Levert på døren om 7–10 dager.
               </div>
             </div>
           </div>
 
-          {/* Actions */}
-          <div className="flex items-center gap-2.5 border-t border-line bg-snow px-5 py-4 sm:px-6">
-            <OrderButton bookId={id} />
+          {/* Proof + order */}
+          <div className="border-t border-line bg-snow px-5 py-4 sm:px-6">
             <Link
               href={`/api/books/${id}/pdf`}
               prefetch={false}
-              className="tap flex items-center justify-center border border-line px-5 py-[15px] text-[13px] font-medium text-gran transition-colors hover:border-gran"
+              className="tap mb-2.5 flex items-center justify-center gap-2 text-[12.5px] font-medium text-gran hover:text-ink"
             >
-              PDF
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+              Se korrektur (PDF) — akkurat slik den trykkes
             </Link>
+            <div className="flex items-center gap-2.5">
+              <OrderFlow bookId={id} pageCount={pageCount} />
+            </div>
           </div>
         </>
       )}
@@ -104,30 +116,106 @@ export default async function BookPrintPage({
   );
 }
 
-/** Ordrebekreftelse. */
-function OrderConfirmation({ title, pageCount }: { title: string; pageCount: number }) {
+/** The fulfillment stages a book moves through after ordering. */
+const STAGES: { key: string; label: string; note: string }[] = [
+  { key: "submitted", label: "Bestilt", note: "Vi har mottatt bestillingen." },
+  { key: "in_production", label: "Trykkes og sys", note: "Sidene trykkes og bindes i lin." },
+  { key: "shipped", label: "Sendt", note: "På vei med Posten." },
+  { key: "delivered", label: "Levert", note: "Fremme hos deg." },
+];
+
+/** Ordrebekreftelse — en kvittering med referanse, tidslinje og detaljer. */
+function OrderConfirmation({
+  title,
+  pageCount,
+  order,
+}: {
+  title: string;
+  pageCount: number;
+  order: Awaited<ReturnType<typeof getLatestOrder>>;
+}) {
+  const ref = (order?.id ?? "").replace(/-/g, "").slice(0, 8).toUpperCase();
+  const currentStage = Math.max(
+    0,
+    STAGES.findIndex((s) => s.key === (order?.status ?? "submitted")),
+  );
+  const amount = order?.amountCents != null ? kr(Math.round(order.amountCents / 100)) : null;
+
   return (
-    <div className="flex flex-col gap-6 bg-papir px-6 py-14 sm:px-8">
-      <div className="flex h-11 w-11 items-center justify-center bg-salvie text-lg text-gran">✓</div>
-      <h1 className="serif text-[29px] font-normal leading-tight text-ink" style={{ textWrap: "pretty" }}>
-        Boken er på vei til bindingen.
-      </h1>
-      <p className="max-w-md font-light leading-relaxed text-stone">
-        Vi sier fra når den er sydd, og igjen når den er på døren. Levering om 7–10 dager.
-      </p>
-      <div className="flex flex-col gap-2.5 border-t border-line pt-5">
-        <div className="flex justify-between text-[13px]">
-          <span className="text-stone">{title}</span>
-          <span>{pageCount} sider · lin</span>
-        </div>
-        <div className="flex justify-between text-[13px]">
-          <span className="text-stone">Levering</span>
-          <span>Posten · hjem</span>
-        </div>
+    <div className="flex flex-col gap-6 bg-papir px-6 py-12 sm:px-8">
+      <div>
+        <div className="flex h-11 w-11 items-center justify-center bg-salvie text-lg text-gran">✓</div>
+        <h1 className="serif mt-6 text-[29px] font-normal leading-tight text-ink" style={{ textWrap: "pretty" }}>
+          Boken er på vei til bindingen.
+        </h1>
+        <p className="mt-3 max-w-md font-light leading-relaxed text-stone">
+          Vi bekrefter på e-post før trykk, og sier fra igjen når den er sendt.
+          {ref && (
+            <>
+              {" "}
+              Ordrenr. <span className="text-ink tabular-nums">{ref}</span>.
+            </>
+          )}
+        </p>
       </div>
+
+      {/* Fulfillment timeline */}
+      <ol className="flex flex-col border-t border-line pt-5">
+        {STAGES.map((s, i) => {
+          const done = i <= currentStage;
+          return (
+            <li key={s.key} className="flex gap-3.5 pb-4 last:pb-0">
+              <div className="flex flex-col items-center">
+                <span
+                  className={
+                    "flex h-4 w-4 items-center justify-center rounded-full text-[8px] " +
+                    (done ? "bg-gran text-snow" : "border border-line bg-snow text-transparent")
+                  }
+                >
+                  ✓
+                </span>
+                {i < STAGES.length - 1 && (
+                  <span className={"mt-0.5 w-px flex-1 " + (i < currentStage ? "bg-gran" : "bg-line")} />
+                )}
+              </div>
+              <div className="-mt-0.5 pb-1">
+                <div className={"text-[13.5px] " + (done ? "text-ink" : "text-stone")}>{s.label}</div>
+                <div className="mt-0.5 text-[11.5px] font-light text-stone">{s.note}</div>
+              </div>
+            </li>
+          );
+        })}
+      </ol>
+
+      {/* Receipt */}
+      <div className="flex flex-col gap-2.5 border-t border-line pt-5 text-[13px]">
+        <div className="flex justify-between">
+          <span className="text-stone">{title}</span>
+          <span className="text-ink">{pageCount} sider · lin</span>
+        </div>
+        {order?.copies ? (
+          <div className="flex justify-between">
+            <span className="text-stone">Eksemplarer</span>
+            <span className="text-ink">{order.copies}</span>
+          </div>
+        ) : null}
+        {order?.recipientName && (
+          <div className="flex justify-between gap-6">
+            <span className="text-stone">Mottaker</span>
+            <span className="text-right text-ink">{order.recipientName}</span>
+          </div>
+        )}
+        {amount && (
+          <div className="flex justify-between border-t border-line pt-2.5">
+            <span className="font-medium text-ink">Totalt</span>
+            <span className="serif text-[16px] text-ink tabular-nums">{amount}</span>
+          </div>
+        )}
+      </div>
+
       <Link
         href="/library"
-        className="tap mt-2 self-start border border-line px-5 py-3 text-[13px] font-medium text-gran transition-colors hover:border-gran"
+        className="tap mt-1 self-start border border-line px-5 py-3 text-[13px] font-medium text-gran transition-colors hover:border-gran"
       >
         Tilbake til biblioteket
       </Link>

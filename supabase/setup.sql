@@ -242,6 +242,9 @@ create table orders (
   recipient_name text,
   recipient_address text,
   gift_note text,
+  copies int not null default 1,
+  amount_cents int,
+  currency text not null default 'nok',
   created_at timestamptz not null default now()
 );
 

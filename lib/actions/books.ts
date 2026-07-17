@@ -9,6 +9,9 @@ import {
   type BookInput,
 } from "@/lib/schemas/book";
 import type { PageTemplate } from "@/lib/schemas/common";
+import { getBookWithContent } from "@/lib/data/books";
+import { buildBookPages, estimatePageCount } from "@/lib/book/layout";
+import { orderTotal } from "@/lib/book/pricing";
 
 export async function createBook(input: BookInput) {
   const parsed = bookInputSchema.safeParse(input);
@@ -235,20 +238,51 @@ export async function deleteBook(id: string) {
   redirect("/books");
 }
 
+export interface OrderDetails {
+  copies: number;
+  recipientName: string;
+  recipientAddress: string;
+  giftNote?: string | null;
+}
+
 /**
- * Place a print order for a book (fulfillment is stubbed). Records the order
- * and marks the book "ordered", then lands on the confirmation.
+ * Place a print order for a book (fulfillment is stubbed). Recomputes the page
+ * count and price server-side (never trusts the client), records the order with
+ * recipient + copies + amount, marks the book "ordered", and lands on the
+ * confirmation.
  */
-export async function orderBook(bookId: string): Promise<{ error?: string }> {
+export async function orderBook(
+  bookId: string,
+  details: OrderDetails,
+): Promise<{ error?: string }> {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return { error: "Du må være logget inn." };
 
-  const { error } = await supabase
-    .from("orders")
-    .insert({ book_id: bookId, status: "submitted" });
+  const name = details.recipientName?.trim();
+  const address = details.recipientAddress?.trim();
+  if (!name) return { error: "Fyll inn navnet på mottakeren." };
+  if (!address || address.length < 8) return { error: "Fyll inn en fullstendig leveringsadresse." };
+
+  // Authoritative price: recompute pages from the book's content. Author
+  // name/avatar don't affect the page count, so we pass null.
+  const book = await getBookWithContent(bookId);
+  if (!book) return { error: "Fant ikke boken." };
+  const pages = estimatePageCount(buildBookPages(book, null, null));
+  const { copies, total } = orderTotal(pages, details.copies);
+
+  const { error } = await supabase.from("orders").insert({
+    book_id: bookId,
+    status: "submitted",
+    copies,
+    amount_cents: total * 100,
+    currency: "nok",
+    recipient_name: name,
+    recipient_address: address,
+    gift_note: details.giftNote?.trim() || null,
+  });
   if (error) return { error: error.message };
 
   await supabase.from("books").update({ status: "ordered" }).eq("id", bookId);

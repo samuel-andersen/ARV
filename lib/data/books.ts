@@ -76,6 +76,42 @@ export async function getPendingInvites(email: string): Promise<PendingInvite[]>
   }));
 }
 
+export interface PlacedOrder {
+  id: string;
+  status: string;
+  copies: number;
+  amountCents: number | null;
+  currency: string;
+  recipientName: string | null;
+  recipientAddress: string | null;
+  giftNote: string | null;
+  createdAt: string;
+}
+
+/** The most recent order for a book (for the confirmation receipt). */
+export async function getLatestOrder(bookId: string): Promise<PlacedOrder | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("orders")
+    .select("id, status, copies, amount_cents, currency, recipient_name, recipient_address, gift_note, created_at")
+    .eq("book_id", bookId)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error || !data) return null;
+  return {
+    id: data.id,
+    status: data.status,
+    copies: data.copies ?? 1,
+    amountCents: data.amount_cents ?? null,
+    currency: data.currency ?? "nok",
+    recipientName: data.recipient_name ?? null,
+    recipientAddress: data.recipient_address ?? null,
+    giftNote: data.gift_note ?? null,
+    createdAt: data.created_at,
+  };
+}
+
 export async function listBooks(): Promise<BookListItem[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
